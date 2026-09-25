@@ -46,7 +46,7 @@ frontend/ Next.js
 
 ## Choix techniques
 
-**Backend : Java 21 · Spring Boot 3 · Maven** (imposé par le sujet), PostgreSQL, schéma versionné
+**Backend : Java 21 · Spring Boot 4.1 · Maven** (imposé par le sujet), PostgreSQL, schéma versionné
 par **Flyway** en SQL portable — ce qui permet d'exécuter les tests d'intégration sur H2 sans
 aucune base locale.
 
