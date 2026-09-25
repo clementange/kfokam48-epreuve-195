@@ -60,7 +60,7 @@ sequenceDiagram
                 S->>R: presenceRepository.save(Presence source=ETUDIANT)
                 R->>DB: INSERT INTO presence (...) VALUES (...)
                 DB-->>R: id généré
-                Note over DB: la contrainte UNIQUE(session_id, etudiant_id)<br/>protège contre deux requêtes simultanées ;<br/>sa violation est traduite en 409 DEJA_PRESENT
+                Note over DB: la contrainte UNIQUE(session_id, etudiant_id)<br/>protège contre deux requêtes simultanées —<br/>sa violation est traduite en 409 DEJA_PRESENT
                 R-->>S: Presence
                 S-->>API: PresenceDTO
                 API-->>F: 201 { id, sessionId, etudiantId, source: "ETUDIANT" }
