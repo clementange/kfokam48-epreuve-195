@@ -91,7 +91,7 @@ L'objectif n'est pas de noter à la place du formateur, mais de faire porter la 
 | Réf | Règle | Source |
 |---|---|---|
 | **RG1** | Un code de présence expire 15 minutes après l'ouverture de la session | Q2 |
-| **RG2** | Le code d'une session est unique parmi les sessions ouvertes | Décision — sans unicité, un code peut désigner deux séances |
+| **RG2** | Le code d'une session est unique, globalement et non seulement parmi les sessions ouvertes | Décision — sans unicité, un code peut désigner deux séances. L'unicité globale est retenue parce que H2, sur lequel tournent les tests, ne sait pas créer d'index partiel |
 | **RG3** | Une présence est unique pour un couple (étudiant, session) ; une seconde tentative est refusée en `409 DEJA_PRESENT` | Contrat |
 | **RG4** | Un code qui ne correspond à aucune session ouverte de la promotion de l'étudiant est refusé en `400 CODE_INCONNU` | Contrat |
 | **RG5** | Un code dont la date d'expiration est dépassée est refusé en `410 CODE_EXPIRE` | Q2, Contrat |

@@ -89,6 +89,24 @@
 
 	<build>
 		<plugins>
+			<!--
+				Surefire n'execute par defaut que *Test, Test* et *Tests. Nos tests
+				d'integration sont suffixes IT, par convention, pour qu'on voie d'un
+				coup d'oeil lesquels demarrent un contexte Spring. On les ajoute ici
+				plutot que de les renommer : `./mvnw test` doit tout lancer, c'est la
+				commande que le correcteur tapera.
+			-->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<includes>
+						<include>**/*Test.java</include>
+						<include>**/*Tests.java</include>
+						<include>**/*IT.java</include>
+					</includes>
+				</configuration>
+			</plugin>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>

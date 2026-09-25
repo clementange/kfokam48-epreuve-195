@@ -48,6 +48,10 @@ info:
         conséquence directe de RG6 et RG12, inexprimable autrement.
       - 429 TROP_D_ESSAIS sur POST /api/presences : Q4 impose un blocage de deux
         minutes après cinq erreurs, aucun code du contrat initial ne le couvre.
+      - 404 PROMOTION_INCONNUE sur POST /api/sessions : le contrat impose déjà ce
+        code en 404 sur GET /api/tableau. Un même code d'erreur ne peut pas valoir
+        404 là et 400 ici — la cohérence « un code, un statut » prime, sans quoi un
+        client ne peut pas traiter les erreurs de façon uniforme.
 
     ## Conventions
 
@@ -118,7 +122,8 @@ paths:
                 code: "K7M2QX"
                 ouvertureAt: "2026-09-25T08:30:00Z"
                 expirationAt: "2026-09-25T08:45:00Z"
-        "400": { $ref: "#/components/responses/Erreur" }   # REQUETE_INVALIDE, PROMOTION_INCONNUE
+        "400": { $ref: "#/components/responses/Erreur" }   # REQUETE_INVALIDE
+        "404": { $ref: "#/components/responses/Erreur" }   # PROMOTION_INCONNUE (ajout, voir description)
 
     # ----- AJOUT — Liste des sessions d'une promotion (écran formateur) -------
     get:
