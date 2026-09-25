@@ -1,6 +1,7 @@
 package cm.kfokam48.presence.web;
 
 import cm.kfokam48.presence.service.SessionService;
+import cm.kfokam48.presence.web.dto.ClotureDTO;
 import cm.kfokam48.presence.web.dto.OuvrirSessionRequete;
 import cm.kfokam48.presence.web.dto.SessionDTO;
 import cm.kfokam48.presence.web.dto.SessionOuverteDTO;
@@ -32,6 +33,20 @@ public class SessionController {
     @ResponseStatus(HttpStatus.CREATED)
     public SessionOuverteDTO ouvrir(@RequestBody @Valid OuvrirSessionRequete requete) {
         return SessionOuverteDTO.de(service.ouvrir(requete.titre(), requete.promotionId()));
+    }
+
+    /**
+     * EF5, EF6 — {@code POST /api/sessions/{id}/cloture}.
+     *
+     * <p>Opération <b>ajoutée</b> au contrat : elle comble le trou principal de
+     * la demande du client, qui parle de « clôturer la session » (Q10, Q12) sans
+     * jamais dire ce que c'est ni comment on le fait.
+     *
+     * <p>Erreurs : {@code 404} séance inconnue, {@code 409} déjà clôturée.
+     */
+    @PostMapping("/{id}/cloture")
+    public ClotureDTO cloturer(@PathVariable Long id) {
+        return ClotureDTO.de(service.cloturer(id));
     }
 
     /** Opération ajoutée au contrat : alimente l'écran formateur. */
