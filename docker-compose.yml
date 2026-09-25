@@ -14,11 +14,15 @@
 # d'environnement, jamais par un fichier versionne.
 # =============================================================================
 
+# Les services ne portent pas de `container_name` fixe : Docker les nomme a
+# partir du repertoire, ce qui evite un conflit si une pile du meme nom tourne
+# deja sur la machine du correcteur. `docker compose ps` les retrouve de toute
+# facon depuis ce repertoire.
+
 services:
 
   base:
     image: postgres:16-alpine
-    container_name: kfokam48-base
     environment:
       POSTGRES_DB: kfokam48
       POSTGRES_USER: kfokam48
@@ -43,7 +47,6 @@ services:
   backend:
     build:
       context: ./backend
-    container_name: kfokam48-backend
     depends_on:
       base:
         condition: service_healthy
@@ -80,7 +83,6 @@ services:
         # NAVIGATEUR appellera, donc celle vue depuis la machine du correcteur,
         # et non le nom de service Docker, inconnu hors du reseau interne.
         NEXT_PUBLIC_API_URL: ${API_URL_NAVIGATEUR:-http://localhost:8080}
-    container_name: kfokam48-frontend
     depends_on:
       backend:
         condition: service_healthy
