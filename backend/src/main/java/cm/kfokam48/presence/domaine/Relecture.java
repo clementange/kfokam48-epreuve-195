@@ -2,6 +2,7 @@ package cm.kfokam48.presence.domaine;
 
 import jakarta.persistence.*;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 
 /**
@@ -79,6 +80,20 @@ public class Relecture {
     /** RG18 — vrai si la note est un entier recevable. */
     public static boolean noteRecevable(Integer note) {
         return note != null && note >= NOTE_MINIMALE && note <= NOTE_MAXIMALE;
+    }
+
+    /**
+     * RG18, Q9 — « Sur 20, en nombres entiers. »
+     *
+     * <p>Une note décimale est refusée et non arrondie : arrondir déciderait à la
+     * place du relecteur, et l'étudiant recevrait une note que personne n'a mise.
+     * {@code 16.0} est en revanche accepté — c'est bien un entier, écrit autrement.
+     */
+    public static boolean noteRecevable(BigDecimal note) {
+        if (note == null || note.stripTrailingZeros().scale() > 0) {
+            return false;
+        }
+        return noteRecevable(note.intValueExact());
     }
 
     public Long getId() {
