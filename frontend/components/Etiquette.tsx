@@ -1,0 +1,69 @@
+import type { Source, StatutExercice, StatutRelecture, StatutSession } from '@/lib/api';
+
+/**
+ * Les étiquettes de statut — ENF9.
+ *
+ * Deux règles tenues ici :
+ *
+ * 1. **Un statut porte toujours un libellé en plus de sa couleur.** L'information
+ *    ne doit jamais reposer sur la seule teinte : daltonisme, impression en noir
+ *    et blanc, écran mal calibré.
+ * 2. **La même couleur signifie la même chose partout.** Vert = abouti,
+ *    orange = en attente de quelqu'un, rouge = impossible, gris = neutre.
+ */
+
+type Ton = 'succes' | 'attente' | 'danger' | 'neutre' | 'info';
+
+function Etiquette({ ton, children }: { ton: Ton; children: React.ReactNode }) {
+  return <span className={`etiquette ${ton}`}>{children}</span>;
+}
+
+const EXERCICE: Record<StatutExercice, { ton: Ton; libelle: string }> = {
+  DEPOSE: { ton: 'info', libelle: 'Déposé' },
+  EN_ATTENTE_RELECTURE: { ton: 'attente', libelle: 'En attente de relecture' },
+  RELU: { ton: 'succes', libelle: 'Relu' },
+  // Rouge, parce que c'est une impasse : personne ne le notera jamais (RG16).
+  NON_ASSIGNE: { ton: 'danger', libelle: 'Aucun relecteur disponible' },
+};
+
+export function StatutExerciceEtiquette({ statut }: { statut: StatutExercice }) {
+  const { ton, libelle } = EXERCICE[statut];
+  return <Etiquette ton={ton}>{libelle}</Etiquette>;
+}
+
+export function StatutSessionEtiquette({ statut }: { statut: StatutSession }) {
+  return statut === 'OUVERTE' ? (
+    <Etiquette ton="succes">Ouverte</Etiquette>
+  ) : (
+    <Etiquette ton="neutre">Clôturée</Etiquette>
+  );
+}
+
+export function StatutRelectureEtiquette({ statut }: { statut: StatutRelecture }) {
+  return statut === 'RENDUE' ? (
+    <Etiquette ton="succes">Rendue</Etiquette>
+  ) : (
+    <Etiquette ton="attente">À rendre</Etiquette>
+  );
+}
+
+/**
+ * RG8, Q14 — « il faut que ça se voie : marquez "ajouté par le formateur" ».
+ * C'est la raison d'être du champ `source` : elle doit être visible à l'écran,
+ * pas seulement en base.
+ */
+export function SourceEtiquette({ source }: { source: Source }) {
+  return source === 'FORMATEUR' ? (
+    <Etiquette ton="attente">Ajouté par le formateur</Etiquette>
+  ) : (
+    <Etiquette ton="neutre">Saisi par l&apos;étudiant</Etiquette>
+  );
+}
+
+/** RG22 — une moyenne absente s'écrit « — », jamais 0 : ce n'est pas la même chose. */
+export function Moyenne({ valeur }: { valeur: number | null }) {
+  if (valeur === null || valeur === undefined) {
+    return <span className="sans-valeur" title="Aucune note reçue pour l'instant">—</span>;
+  }
+  return <strong>{valeur.toFixed(2).replace('.', ',')} / 20</strong>;
+}
