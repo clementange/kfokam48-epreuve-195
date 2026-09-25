@@ -1,7 +1,7 @@
 # Cahier des charges — Présence & Relecture KFOKAM48
 
 **Auteur :** Kengne Ange Clément · matricule **195**
-**Version :** 3 · **Date :** 25 septembre 2026
+**Version :** 4 · **Date :** 25 septembre 2026
 **Frontend choisi :** **Next.js**, parce que son routage par fichiers donne gratuitement les trois écrans imposés (F2) et que son découpage `app/` / `services/` impose naturellement la couche d'appels API exigée par F3.
 
 ---
@@ -43,7 +43,7 @@ L'objectif n'est pas de noter à la place du formateur, mais de faire porter la 
 
 **Explicitement exclu :**
 
-- **Toute authentification** — pas de mot de passe, pas de session utilisateur, pas de contrôle d'accès réel. L'étudiant se désigne dans une liste (Q1). Une application réelle ne pourrait pas se le permettre ; c'est une simplification assumée du sujet.
+- **Toute authentification** — pas de mot de passe, pas de session utilisateur, pas de contrôle d'accès réel. L'étudiant se désigne dans une liste (Q1). C'est une simplification **imposée** par le client, pas un oubli — mais elle a un coût que le §7 chiffre précisément, et qui va jusqu'à rendre la fonction principale du produit contournable.
 - **La gestion des comptes** — création, modification, suppression de promotions, d'étudiants et de formateurs. Ces données sont injectées par le jeu de démonstration.
 - **Plusieurs relecteurs par exercice** (Q6 fixe le nombre à un) et la relecture croisée ou en cascade.
 - **L'historique des modifications d'une note** — sans objet, la note est définitive (RG18).
@@ -130,7 +130,7 @@ L'objectif n'est pas de noter à la place du formateur, mais de faire porter la 
 | **Que faire si aucun relecteur n'est éligible ?** Un seul étudiant présent, ou un seul déposant | Aucune réponse | L'exercice reste `NON_ASSIGNE`, sans relecture ni note, et le formateur le voit dans son tableau | RG16. Le cas se produit à chaque session de démonstration à un seul étudiant, il ne peut pas être ignoré |
 | **Le blocage de Q4 porte sur quoi ?** Cinq erreurs de qui : d'un étudiant, d'un appareil, d'une adresse réseau ? | Q4 dit seulement « bloquez-le deux minutes » | Blocage **par étudiant sélectionné**, compteur en mémoire remis à zéro après un succès ou après 2 minutes | RG7. Le contrat ne prévoit pas de code HTTP pour ce cas : on ajoute `429 TROP_D_ESSAIS`, documenté comme extension |
 | **Qui crée les promotions, les étudiants et les formateurs ?** | Q1 supprime l'authentification mais ne dit rien de l'origine des données | Hors périmètre. Les données sont injectées par une migration de démonstration | Le correcteur ouvre une application déjà peuplée (ENF6) |
-| **Comment le formateur est-il identifié ?** | Aucune réponse. Q1 ne concerne que l'étudiant | Un formateur unique par promotion dans le jeu de démonstration, aucun contrôle d'accès | Assumé comme une faiblesse : en production, ouvrir une session ou clôturer une séance exigerait une authentification |
+| **Comment le formateur est-il identifié ?** | Aucune réponse. Q1 ne concerne que l'étudiant | Un formateur unique par promotion dans le jeu de démonstration, aucun contrôle d'accès | Voir l'encadré « Ce que l'absence d'authentification coûte réellement », plus bas : la conséquence dépasse largement l'identification du formateur |
 | **Un étudiant peut-il marquer sa présence à la session d'une autre promotion ?** | Aucune réponse | Non : le code est recherché parmi les sessions ouvertes de la promotion de l'étudiant uniquement. Un code valide d'une autre promotion est traité comme inconnu | RG24, réponse `400 CODE_INCONNU` — on ne révèle pas l'existence d'un code qui ne concerne pas l'étudiant |
 | **Sur quoi porte la moyenne du tableau ?** Notes reçues ou notes données ? | Q16 dit « la moyenne des notes reçues » | Moyenne des notes **reçues** par l'étudiant sur ses propres exercices. `null` si aucune | RG22, conforme au champ `moyenne` nullable du contrat |
 | **Quand une note cesse-t-elle d'être provisoire ?** Le changement de besoin demande d'afficher une note « marquée comme provisoire » si un seul des deux relecteurs a rendu, sans dire quand elle devient définitive | Aucune réponse. La notion de « provisoire » n'existait pas avant l'étape 3 | Une note est **provisoire tant qu'une relecture assignée n'a pas été rendue**. Elle devient définitive quand toutes l'ont été, **quel que soit leur nombre** | RG26. Conséquence assumée : un exercice n'ayant trouvé qu'un pair éligible porte une note **définitive** dès la première relecture. Il n'y a personne à attendre — la marquer provisoire ferait croire à l'étudiant qu'elle peut encore changer |
@@ -139,8 +139,41 @@ L'objectif n'est pas de noter à la place du formateur, mais de faire porter la 
 
 | Réponses en conflit | Ce que j'ai choisi | Pourquoi |
 |---|---|---|
+| **Q1** — « Faut-il un mot de passe ? Non, l'étudiant choisit son nom dans une liste. »<br>**Q4** — « Au bout de cinq erreurs, bloquez-le deux minutes, sinon **ils vont deviner les codes entre eux**. » | **Q1 est appliquée**, RG25. Mais la contradiction est signalée au client plutôt qu'arbitrée en silence | Q4 montre que le client **redoute la présence frauduleuse** : c'est une préoccupation de sécurité explicite. Q1 la rend pourtant triviale. Il se protège d'une attaque difficile — forcer 32⁶ combinaisons avant expiration — tout en laissant ouverte la porte évidente : **personne ne vérifie qui saisit le code**. Un étudiant présent, qui lit le code projeté au tableau, marque ses camarades absents en choisissant leur nom dans une liste déroulante. Appliquer Q1 est la bonne décision pour ce projet, mais la signaler est le minimum : le client croit être protégé et il ne l'est pas |
 | **Q6** — « Combien de relecteurs par exercice ? Un seul. »<br>**Changement de besoin de l'étape 3** — « chaque exercice est relu par **deux pairs différents** » | **Deux relecteurs.** RG15 est réécrite, Q6 est caduque | Le client se contredit **avec lui-même**, à quelques jours d'intervalle, et il explique pourquoi : « quand il ne rend rien, l'étudiant n'a aucune note ». Sa réponse la plus récente est aussi la mieux motivée — elle corrige un défaut qu'il a constaté à l'usage. Q6 reste citée ici plutôt qu'effacée : une règle qu'on abandonne doit laisser une trace, sinon le prochain lecteur croira à un oubli |
 | **Q10** — « Un relecteur peut corriger sa note, tant que le formateur n'a pas clôturé la session »<br>**Q15** — « Une fois que le relecteur a validé, c'est fini, il ne peut plus y revenir » | **Q15 : la note est définitive dès validation.** Une relecture rendue ne peut plus être modifiée (RG19) | Trois raisons. D'abord, **le contrat d'API impose `409 RELECTURE_DEJA_RENDUE`** sur `POST /api/relectures/{id}` : le comportement attendu côté API est explicitement le refus, et le contrat prime sur une réponse orale. Ensuite, Q15 énonce une intention argumentée par le client lui-même — « c'est plus honnête pour tout le monde » — quand Q10 n'est qu'un « oui » sans motif. Enfin, retenir Q10 rendrait le `409` du contrat inatteignable, donc le contrat incohérent. **Conséquence assumée :** une note erronée ne peut pas être rattrapée dans cette version ; si le client conteste, la reprise est une évolution à chiffrer, pas un correctif |
+
+### Ce que l'absence d'authentification coûte réellement
+
+Q1 tranche : pas de mot de passe. La décision est appliquée (RG25) et l'authentification est hors
+périmètre (§3). Mais « hors périmètre » ne veut pas dire « sans conséquence », et écrire simplement
+« faiblesse assumée » serait une façon de ne pas regarder. Voici ce que n'importe qui peut faire
+sur l'application livrée :
+
+| Action possible | Conséquence |
+|---|---|
+| **Marquer la présence d'un absent**, en choisissant son nom dans la liste | **La fonction principale du produit est contournable.** Le code est projeté au tableau, donc connu de tous les présents |
+| Ouvrir l'écran formateur et **clôturer une séance** | Irréversible (RG14). Bloque les dépôts de toute la promotion et déclenche l'assignation prématurément |
+| **Rendre une relecture à la place d'un autre relecteur** | La note attribuée n'est pas celle de la personne désignée, et elle est définitive (RG19) |
+| Ouvrir des séances parasites, ajouter des présences « par le formateur » | Pollue les données et fausse le tableau |
+| Consulter les notes de n'importe quel étudiant | Q8 protège l'anonymat du **relecteur**, rien ne protège la note de l'**auteur** |
+
+**Le premier point est le plus grave, et il mérite d'être dit au client.** L'application remplace
+l'appel oral pour le fiabiliser. Sans identification, elle le fiabilise *moins* : à l'oral, un
+absent ne répond pas ; ici, un camarade le déclare présent en trente secondes. Le produit est
+correct au regard de la demande, et insuffisant au regard de l'objectif.
+
+**Ce qu'il faudrait en production**, par ordre de coût croissant :
+
+1. **Un code nominatif à usage unique** par étudiant plutôt qu'un code de séance partagé. Corrige
+   la fraude principale sans introduire de mots de passe — donc sans contredire l'esprit de Q1.
+2. **Une session authentifiée** avec un rôle `FORMATEUR` ou `ETUDIANT`, et un contrôle côté serveur
+   sur chaque opération : seul un formateur clôture, seul le relecteur désigné note.
+3. **Une fédération d'identité** avec l'annuaire de la formation, pour ne pas gérer de mots de passe.
+
+Aucune de ces trois n'est implémentée, et c'est délibéré : Q1 l'interdit explicitement — « ne
+perdez pas de temps là-dessus ». Mais un client qui lit ce paragraphe sait ce qu'il achète, et
+peut décider en connaissance de cause. C'était le but de cette section.
 
 *Une hypothèse écrite est toujours acceptée. Une hypothèse silencieuse est une faute.*
 
@@ -236,6 +269,7 @@ Ce choix coûte une fusion supplémentaire à chaque jalon, et il l'assume : il 
 | Version | Quand | Ce qui a changé et pourquoi |
 |---|---|---|
 | 1 | 25/09/2026 | Version initiale, avant tout code. Contradiction Q10/Q15 tranchée en faveur de Q15 ; quatre trous de la demande comblés par décision (cycle de vie de la session, moment de l'assignation, absence de relecteur éligible, appartenance à une promotion) |
+| 6 | 25/09/2026 | **Troisième contradiction du client relevée, et portée de l'absence d'authentification chiffrée.** Q4 — « ils vont deviner les codes entre eux » — montre que le client redoute la présence frauduleuse, alors que Q1 la rend triviale : personne ne vérifie qui saisit le code. Q1 reste appliquée, mais la contradiction est signalée plutôt qu'arbitrée en silence. Le §7 gagne un encadré qui énumère ce que n'importe qui peut faire sur l'application livrée — dont **marquer la présence d'un absent**, ce qui rend la fonction principale du produit contournable — et les trois corrections possibles par ordre de coût. Le §2 précise que les rôles sont fonctionnels et non techniques. **Aucun changement de code** : c'est une lacune d'analyse, pas d'implémentation |
 | 5 | 25/09/2026 | **Conséquence du changement de besoin de l'étape 3** (issues #34 et #35). **RG15 est réécrite** : deux relecteurs par exercice au lieu d'un, ce qui rend **Q6 caduque** — le client se contredit avec lui-même et sa réponse la plus récente, mieux motivée, l'emporte. **RG26 est ajoutée** : la note est la moyenne des relectures rendues, provisoire tant qu'une relecture assignée manque. **RG16 est étendue** au cas d'un unique pair éligible. **RG22** porte désormais sur toutes les notes reçues, deux par exercice. Le §7 gagne une contradiction et une zone d'ombre — le client n'avait pas dit quand une note cesse d'être provisoire. D2, D4, le contrat et le frontend suivent |
 | 4 | 25/09/2026 | **Révision du sujet par la direction.** L'épreuve Git sur dépôt fourni est supprimée — le bundle n'existait pas —, « Soumettre » devient l'étape 5, et l'épreuve compte cinq étapes. Le barème est redistribué : Git 30 points au lieu de 15 hors git-lab, Produit et conformité 17 au lieu de 15. Le §10 et `SOUMISSION.md` sont corrigés en conséquence. Aucune incidence sur le produit : le travail déjà fait reste valable, seule la répartition des points change |
 | 3 | 25/09/2026 | **ENF11 ajoutée après vérification réelle dans un navigateur.** Le frontend et l'API étant servis sur deux ports, tout appel est *cross-origin* : sans en-têtes CORS le navigateur les bloque tous. Le défaut ne se voyait pas en test — `curl` n'applique aucune politique d'origine et répondait `200`. Constaté en lançant la pile Docker, corrigé, et inscrit en exigence pour qu'il soit vérifié comme tel |
