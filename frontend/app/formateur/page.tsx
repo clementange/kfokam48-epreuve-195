@@ -1,7 +1,14 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { api, type Cloture, type LigneTableau, type Session, type SessionOuverte } from '@/lib/api';
+import {
+  api,
+  type Cloture,
+  type Etudiant,
+  type LigneTableau,
+  type Session,
+  type SessionOuverte,
+} from '@/lib/api';
 import { Chargement, Erreur, Info, Succes, Vide } from '@/components/Etat';
 import { Moyenne, StatutSessionEtiquette } from '@/components/Etiquette';
 import { SelecteurPromotion } from '@/components/SelecteurPromotion';
@@ -26,6 +33,13 @@ export default function EcranFormateur() {
   const [clotureEnCours, setClotureEnCours] = useState<number | null>(null);
 
   const [erreur, setErreur] = useState<unknown>(null);
+
+  // EF9, Q14 — ajout manuel d'une présence.
+  const [etudiants, setEtudiants] = useState<Etudiant[] | null>(null);
+  const [seanceManuelle, setSeanceManuelle] = useState<number | ''>('');
+  const [etudiantManuel, setEtudiantManuel] = useState<number | ''>('');
+  const [ajoutEnCours, setAjoutEnCours] = useState(false);
+  const [ajoutOk, setAjoutOk] = useState<string | null>(null);
 
   const recharger = useCallback(async (id: number) => {
     // Aucun setState avant le premier await : appelée depuis un effet, une
@@ -54,6 +68,17 @@ export default function EcranFormateur() {
         setSeances(s);
         setTableau(t);
       })
+      .catch((e) => !annule && setErreur(e));
+    return () => {
+      annule = true;
+    };
+  }, [promotionId]);
+
+  useEffect(() => {
+    if (promotionId === null) return;
+    let annule = false;
+    api.etudiants(promotionId)
+      .then((e) => !annule && setEtudiants(e))
       .catch((e) => !annule && setErreur(e));
     return () => {
       annule = true;
@@ -89,6 +114,25 @@ export default function EcranFormateur() {
       setErreur(err);
     } finally {
       setClotureEnCours(null);
+    }
+  }
+
+  async function ajouterPresence(e: React.FormEvent) {
+    e.preventDefault();
+    if (promotionId === null || seanceManuelle === '' || etudiantManuel === '') return;
+    setErreur(null);
+    setAjoutOk(null);
+    setAjoutEnCours(true);
+    try {
+      await api.ajouterPresenceManuelle(Number(seanceManuelle), Number(etudiantManuel));
+      const nom = etudiants?.find((s) => s.id === Number(etudiantManuel))?.nom ?? 'L’étudiant';
+      setAjoutOk(`${nom} est marqué présent, avec la mention « ajouté par le formateur ».`);
+      setEtudiantManuel('');
+      await recharger(promotionId);
+    } catch (err) {
+      setErreur(err);
+    } finally {
+      setAjoutEnCours(false);
     }
   }
 
@@ -231,6 +275,64 @@ export default function EcranFormateur() {
           )}
         </section>
       </div>
+
+      <section className="carte">
+        <h3>Ajouter une présence à la main</h3>
+        <p className="aide">
+          Pour un étudiant dont le code n&apos;a pas fonctionné — un téléphone en panne, par
+          exemple. La présence reste <strong>possible après l&apos;expiration du code</strong>, et
+          elle est marquée « ajouté par le formateur » pour que cela se voie (Q14).
+        </p>
+
+        {ajoutOk && <Succes>{ajoutOk}</Succes>}
+
+        <form onSubmit={ajouterPresence}>
+          <div className="champ">
+            <label htmlFor="seance-manuelle">Séance</label>
+            <select
+              id="seance-manuelle"
+              value={seanceManuelle}
+              onChange={(e) =>
+                setSeanceManuelle(e.target.value === '' ? '' : Number(e.target.value))
+              }
+              required
+            >
+              <option value="">— choisissez une séance ouverte —</option>
+              {(seances ?? [])
+                .filter((s) => s.statut === 'OUVERTE')
+                .map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.titre}
+                  </option>
+                ))}
+            </select>
+          </div>
+          <div className="champ">
+            <label htmlFor="etudiant-manuel">Étudiant</label>
+            <select
+              id="etudiant-manuel"
+              value={etudiantManuel}
+              onChange={(e) =>
+                setEtudiantManuel(e.target.value === '' ? '' : Number(e.target.value))
+              }
+              required
+            >
+              <option value="">— choisissez un étudiant —</option>
+              {(etudiants ?? []).map((e) => (
+                <option key={e.id} value={e.id}>
+                  {e.nom}
+                </option>
+              ))}
+            </select>
+          </div>
+          <button
+            className="secondaire"
+            disabled={ajoutEnCours || seanceManuelle === '' || etudiantManuel === ''}
+          >
+            {ajoutEnCours ? 'Ajout…' : 'Marquer présent'}
+          </button>
+        </form>
+      </section>
 
       <section className="carte">
         <h3>Tableau récapitulatif</h3>

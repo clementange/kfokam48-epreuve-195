@@ -10,7 +10,7 @@
 
 | | |
 |---|---|
-| Nom et prénom(s) | |
+| Nom et prénom(s) | Kengne Ange Clément |
 | Matricule | 195 |
 | Centre | Yaoundé / Douala / Bafoussam |
 | Compte GitHub | clementange |
