@@ -3,6 +3,10 @@
 > **Ce diagramme fait foi pour les migrations Flyway.** Toute divergence entre ce schéma et
 > `backend/src/main/resources/db/migration/` est un défaut : c'est ce document qu'on corrige
 > en même temps que la migration, dans le même commit.
+>
+> Les migrations vivent dans deux dossiers : `db/migration` pour le schéma et le référentiel,
+> `db/demo` pour l'activité de démonstration. Seul le premier décrit la structure ; c'est celui
+> que ce diagramme représente.
 
 ```mermaid
 erDiagram
