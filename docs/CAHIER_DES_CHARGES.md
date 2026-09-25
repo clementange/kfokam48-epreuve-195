@@ -154,7 +154,7 @@ L'objectif n'est pas de noter à la place du formateur, mais de faire porter la 
 
 **Que je m'impose en plus :**
 
-- **Java 21** (installé sur le poste), **Spring Boot 3.x**, **Maven** avec wrapper.
+- **Java 21** (installé sur le poste), **Spring Boot 4.1**, **Maven** avec wrapper. Spring Boot 3 n'est plus proposé par `start.spring.io`, dont la plage de compatibilité commence à 4.0.0 — la version retenue est donc 4.1.1.
 - **PostgreSQL 16** en exécution, lancé par `docker compose`. **Aucune** génération de schéma par Hibernate : `spring.jpa.hibernate.ddl-auto=validate`.
 - **Flyway**, migrations numérotées `V1__…`, `V2__…`, écrites en **SQL portable** — aucune extension propriétaire — de sorte que les tests d'intégration tournent sur **H2 en mode compatibilité PostgreSQL** sans Docker ni base locale (ENF7). Une migration déjà poussée n'est jamais modifiée : toute correction passe par une migration supplémentaire, ce qui sera déterminant à l'étape 3.
 - **Mapping entité → DTO écrit à la main**, sans générateur : le volume est faible et la lisibilité prime.
