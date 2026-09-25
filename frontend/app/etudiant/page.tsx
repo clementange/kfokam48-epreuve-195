@@ -236,7 +236,9 @@ export default function EcranEtudiant() {
       <section className="carte">
         <h3>Mes exercices et les notes reçues</h3>
         <p className="aide">
-          Vous voyez la note et le commentaire, mais jamais le nom de votre relecteur (Q8).
+          Chaque exercice est relu par <strong>deux pairs</strong> et la note retenue est la
+          moyenne des deux. Tant qu&apos;un seul a rendu, la note affichée est marquée
+          « provisoire ». Vous ne voyez jamais le nom de vos relecteurs (Q8).
         </p>
 
         {pretSeulement ? (
@@ -291,9 +293,20 @@ export default function EcranEtudiant() {
                         <StatutExerciceEtiquette statut={x.statut} />
                       </td>
                       <td className="nombre">
-                        <Moyenne valeur={x.note} />
+                        <Moyenne valeur={x.note} provisoire={x.provisoire} />
+                        {x.relecturesAttendues > 0 && (
+                          <>
+                            <br />
+                            <small className="sans-valeur">
+                              {x.relecturesRendues} relecture{x.relecturesRendues > 1 ? 's' : ''} sur{' '}
+                              {x.relecturesAttendues}
+                            </small>
+                          </>
+                        )}
                       </td>
-                      <td>{x.commentaire ?? <span className="sans-valeur">—</span>}</td>
+                      <td style={{ whiteSpace: 'pre-line' }}>
+                        {x.commentaire ?? <span className="sans-valeur">—</span>}
+                      </td>
                       <td>
                         {modifiable &&
                           (remplaceId === x.exerciceId ? (

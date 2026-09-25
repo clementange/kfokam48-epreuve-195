@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -208,8 +209,11 @@ class RelectureControllerIT {
 
         String reponse = mvc.perform(get("/api/etudiants/" + AWONO + "/exercices"))
                 .andExpect(status().isOk())
+                // La note est désormais une MOYENNE (issue #35), donc décimale :
+                // 17.0 et non 17. Avec une seule relecture rendue sur une seule
+                // assignée, la moyenne vaut cette note.
                 .andExpect(jsonPath("$[?(@.exerciceId == " + exerciceAwono + ")].note")
-                        .value(org.hamcrest.Matchers.hasItem(17)))
+                        .value(org.hamcrest.Matchers.hasItem(17.0)))
                 .andExpect(jsonPath("$[?(@.exerciceId == " + exerciceAwono + ")].commentaire")
                         .value(org.hamcrest.Matchers.hasItem("Très clair.")))
                 .andExpect(jsonPath("$[?(@.exerciceId == " + exerciceAwono + ")].statut")
@@ -222,6 +226,76 @@ class RelectureControllerIT {
                 .doesNotContain("relecteur")
                 .doesNotContain("Bello")
                 .doesNotContain("rendueAt");
+    }
+
+    @Test
+    @DisplayName("issue #35 — deux relectures rendues : la note est la moyenne des deux, définitive")
+    void moyenneDesDeuxRelectures() throws Exception {
+        // Un second relecteur est assigné au même exercice : c'est précisément ce
+        // que la contrainte UNIQUE (exercice_id) interdisait avant la V4.
+        jdbc.update("""
+                INSERT INTO relecture (exercice_id, relecteur_id, statut, assignee_at)
+                VALUES (?, 3, 'EN_ATTENTE', ?)
+                """, exerciceAwono, java.sql.Timestamp.from(Instant.now()));
+        Long secondeRelecture = jdbc.queryForObject(
+                "SELECT id FROM relecture WHERE exercice_id = ? AND relecteur_id = 3",
+                Long.class, exerciceAwono);
+        synchroniser();
+
+        rendre(relectureDeBello, 14, "correct").andExpect(status().isOk());
+        synchroniser();
+
+        // Une seule des deux rendues : note provisoire, exercice PARTIELLEMENT_RELU
+        assertThat(jdbc.queryForObject("SELECT statut FROM exercice WHERE id = ?",
+                String.class, exerciceAwono)).isEqualTo("PARTIELLEMENT_RELU");
+        mvc.perform(get("/api/etudiants/" + AWONO + "/exercices"))
+                .andExpect(jsonPath("$[?(@.exerciceId == " + exerciceAwono + ")].note")
+                        .value(org.hamcrest.Matchers.hasItem(14.0)))
+                .andExpect(jsonPath("$[?(@.exerciceId == " + exerciceAwono + ")].provisoire")
+                        .value(org.hamcrest.Matchers.hasItem(true)));
+
+        rendre(secondeRelecture, 18, "très bien").andExpect(status().isOk());
+        synchroniser();
+
+        // Les deux rendues : moyenne (14 + 18) / 2 = 16, définitive
+        assertThat(jdbc.queryForObject("SELECT statut FROM exercice WHERE id = ?",
+                String.class, exerciceAwono)).isEqualTo("RELU");
+        mvc.perform(get("/api/etudiants/" + AWONO + "/exercices"))
+                .andExpect(jsonPath("$[?(@.exerciceId == " + exerciceAwono + ")].note")
+                        .value(org.hamcrest.Matchers.hasItem(16.0)))
+                .andExpect(jsonPath("$[?(@.exerciceId == " + exerciceAwono + ")].provisoire")
+                        .value(org.hamcrest.Matchers.hasItem(false)))
+                .andExpect(jsonPath("$[?(@.exerciceId == " + exerciceAwono + ")].relecturesRendues")
+                        .value(org.hamcrest.Matchers.hasItem(2)));
+    }
+
+    @Test
+    @DisplayName("issue #35 — un seul relecteur assigné : sa note est DÉFINITIVE, pas provisoire")
+    void noteDefinitiveQuandUnSeulRelecteurAssigne() throws Exception {
+        // Personne n'est attendu : marquer cette note « provisoire » ferait croire
+        // à l'étudiant qu'elle peut encore changer, ce qui est faux.
+        rendre(relectureDeBello, 15, "bien").andExpect(status().isOk());
+        synchroniser();
+
+        assertThat(jdbc.queryForObject("SELECT statut FROM exercice WHERE id = ?",
+                String.class, exerciceAwono)).isEqualTo("RELU");
+        mvc.perform(get("/api/etudiants/" + AWONO + "/exercices"))
+                .andExpect(jsonPath("$[?(@.exerciceId == " + exerciceAwono + ")].provisoire")
+                        .value(org.hamcrest.Matchers.hasItem(false)));
+    }
+
+    @Test
+    @DisplayName("issue #34 — un même relecteur ne peut pas être assigné deux fois au même exercice")
+    void memeRelecteurDeuxFoisInterdit() {
+        // La V4 a remplacé UNIQUE (exercice_id) par UNIQUE (exercice_id, relecteur_id) :
+        // deux relecteurs différents sont désormais permis, deux fois le même non.
+        assertThatThrownBy(() -> {
+            jdbc.update("""
+                    INSERT INTO relecture (exercice_id, relecteur_id, statut, assignee_at)
+                    VALUES (?, ?, 'EN_ATTENTE', ?)
+                    """, exerciceAwono, BELLO, java.sql.Timestamp.from(Instant.now()));
+            em.flush();
+        }).isInstanceOf(org.springframework.dao.DataIntegrityViolationException.class);
     }
 
     @Test

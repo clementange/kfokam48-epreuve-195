@@ -2,6 +2,10 @@
 
 > Diagramme **bonus** (+3 points). Il complète D2 : chaque état correspond à une valeur de
 > `exercice.statut`, chaque transition à une opération du contrat d'API.
+>
+> **Révisé à l'étape 3.** Le passage à deux relecteurs fait apparaître un état intermédiaire,
+> `PARTIELLEMENT_RELU` : une note existe, mais elle est **provisoire** tant que la seconde
+> relecture n'a pas été rendue (RG26).
 
 ```mermaid
 stateDiagram-v2
@@ -10,10 +14,12 @@ stateDiagram-v2
 
     DEPOSE --> DEPOSE : PUT /api/exercices/:id — 200<br/>remplacement du lien, session ouverte (EF10, RG13)
 
-    DEPOSE --> EN_ATTENTE_RELECTURE : clôture de la session (EF5, RG14)<br/>un relecteur éligible a été tiré (RG15)
+    DEPOSE --> EN_ATTENTE_RELECTURE : clôture de la session (EF5, RG14)<br/>deux relecteurs tirés — ou un seul<br/>s'il n'y a qu'un pair éligible (RG15, RG16)
     DEPOSE --> NON_ASSIGNE : clôture de la session<br/>aucun relecteur éligible (RG16)
 
-    EN_ATTENTE_RELECTURE --> RELU : POST /api/relectures/:id — 200<br/>note 0..20 + commentaire (EF7, RG18)
+    EN_ATTENTE_RELECTURE --> PARTIELLEMENT_RELU : POST /api/relectures/:id — 200<br/>1ʳᵉ note sur 2 : note PROVISOIRE (RG26)
+    PARTIELLEMENT_RELU --> RELU : POST /api/relectures/:id — 200<br/>2ᵈᵉ note : moyenne des deux, définitive (RG26)
+    EN_ATTENTE_RELECTURE --> RELU : POST /api/relectures/:id — 200<br/>un seul relecteur assigné : sa note<br/>est définitive, personne n'est attendu (RG26)
 
     NON_ASSIGNE --> [*] : jamais noté — compté dans le tableau<br/>comme exercice déposé sans moyenne (RG22)
     EN_ATTENTE_RELECTURE --> [*] : le relecteur n'a jamais rendu (Q11, RG21)<br/>reste visible dans relecturesEnAttente
@@ -29,10 +35,14 @@ stateDiagram-v2
 
     note right of RELU
         Aucune transition sortante :
-        Q15 l'emporte sur Q10, la note
-        est figée (RG19). Une nouvelle
-        soumission renvoie
+        Q15 l'emporte sur Q10, chaque
+        note est figée (RG19). Une
+        nouvelle soumission renvoie
         409 RELECTURE_DEJA_RENDUE.
+
+        La note de l'exercice est la
+        moyenne des relectures rendues
+        (RG26, étape 3).
     end note
 ```
 
@@ -42,9 +52,12 @@ stateDiagram-v2
 |---|---|---|---|---|
 | — | Dépôt du lien par un étudiant présent | `DEPOSE` | EF4, RG9, RG10, RG11 | `201 { id, statut }` |
 | `DEPOSE` | Remplacement du lien | `DEPOSE` | EF10, RG13 | `200` |
-| `DEPOSE` | Clôture de la session, relecteur tiré | `EN_ATTENTE_RELECTURE` | RG14, RG15 | — *(effet de la clôture)* |
+| `DEPOSE` | Clôture, **deux** relecteurs tirés | `EN_ATTENTE_RELECTURE` | RG14, RG15 | — *(effet de la clôture)* |
+| `DEPOSE` | Clôture, **un seul** pair éligible | `EN_ATTENTE_RELECTURE` | RG16 | — *(signalé par `exercicesUnSeulRelecteur`)* |
+| `EN_ATTENTE_RELECTURE` | 1ʳᵉ relecture rendue sur 2 | `PARTIELLEMENT_RELU` | **RG26** | `200` — note **provisoire** |
+| `PARTIELLEMENT_RELU` | 2ᵈᵉ relecture rendue | `RELU` | **RG26** | `200` — moyenne, définitive |
 | `DEPOSE` | Clôture de la session, aucun éligible | `NON_ASSIGNE` | RG16 | — *(effet de la clôture)* |
-| `EN_ATTENTE_RELECTURE` | Relecture rendue | `RELU` | EF7, RG18 | `200` |
+| `EN_ATTENTE_RELECTURE` | Relecture rendue, **aucune autre attendue** | `RELU` | EF7, RG18, RG26 | `200` — définitive |
 
 ## Transitions volontairement impossibles
 

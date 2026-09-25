@@ -158,6 +158,13 @@ export default function EcranFormateur() {
             <Succes>
               Séance clôturée. <strong>{cloture.relecturesAssignees}</strong> relecture(s)
               assignée(s).
+              {cloture.exercicesUnSeulRelecteur > 0 && (
+                <>
+                  {' '}
+                  <strong>{cloture.exercicesUnSeulRelecteur}</strong> exercice(s) n&apos;ont trouvé
+                  qu&apos;un seul pair disponible : ils auront une note, mais pas une moyenne.
+                </>
+              )}
               {cloture.exercicesNonAssignes > 0 && (
                 <>
                   {' '}
@@ -172,8 +179,8 @@ export default function EcranFormateur() {
         <section className="carte">
           <h3>Séances</h3>
           <p className="aide">
-            Clôturer une séance ferme les dépôts et désigne les relecteurs. C&apos;est
-            irréversible (RG14).
+            Clôturer une séance ferme les dépôts et désigne <strong>deux relecteurs</strong> par
+            exercice. C&apos;est irréversible (RG14).
           </p>
 
           {!seances ? (
@@ -240,8 +247,9 @@ export default function EcranFormateur() {
         ) : (
           <>
             <Info>
-              Une moyenne notée « — » signifie qu&apos;aucune note n&apos;a encore été reçue.
-              Ce n&apos;est pas un zéro.
+              Une moyenne notée « — » signifie qu&apos;aucune note n&apos;a encore été reçue :
+              ce n&apos;est pas un zéro. Une moyenne marquée « provisoire » attend encore une
+              seconde relecture et peut changer.
             </Info>
             <div className="table-enveloppe">
               <table>
@@ -261,7 +269,7 @@ export default function EcranFormateur() {
                       <td className="nombre">{l.presences}</td>
                       <td className="nombre">{l.exercicesDeposes}</td>
                       <td className="nombre">
-                        <Moyenne valeur={l.moyenne} />
+                        <Moyenne valeur={l.moyenne} provisoire={l.moyenneProvisoire} />
                       </td>
                       <td className="nombre">
                         {l.relecturesEnAttente > 0 ? (

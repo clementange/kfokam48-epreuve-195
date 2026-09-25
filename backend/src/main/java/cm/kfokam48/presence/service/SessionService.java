@@ -34,6 +34,13 @@ public class SessionService {
      */
     private static final int TIRAGES_MAXIMUM = 10;
 
+    /**
+     * RG15 révisée à l'étape 3 — « chaque exercice est relu par deux pairs
+     * différents ». Auparavant un seul, conformément à Q6, que le client a
+     * lui-même contredit.
+     */
+    static final int RELECTEURS_PAR_EXERCICE = 2;
+
     private final SessionRepository sessions;
     private final PromotionRepository promotions;
     private final PresenceRepository presences;
@@ -108,6 +115,7 @@ public class SessionService {
 
         int assignees = 0;
         int nonAssignes = 0;
+        int unSeulRelecteur = 0;
 
         for (Exercice exercice : exercices.findBySessionId(sessionId)) {
             // RG17, Q5 — « Jamais. C'est le principe même. » L'auteur est retiré
@@ -117,23 +125,30 @@ public class SessionService {
                     .filter(etudiantId -> !etudiantId.equals(exercice.getEtudiantId()))
                     .toList();
 
-            Long relecteur = tirage.tirer(candidats);
+            List<Long> relecteurs = tirage.tirer(candidats, RELECTEURS_PAR_EXERCICE);
 
-            if (relecteur == null) {
+            if (relecteurs.isEmpty()) {
                 // RG16 — aucun éligible : l'auteur était seul présent, ou seul à
                 // avoir déposé. Le client n'avait pas prévu ce cas ; il se produit
                 // à chaque séance à un seul étudiant.
                 exercice.marquerNonAssigne();
                 nonAssignes++;
             } else {
-                relectures.save(Relecture.assigner(exercice.getId(), relecteur, maintenant));
+                for (Long relecteur : relecteurs) {
+                    relectures.save(Relecture.assigner(exercice.getId(), relecteur, maintenant));
+                }
                 exercice.marquerEnAttenteDeRelecture();
-                assignees++;
+                assignees += relecteurs.size();
+                if (relecteurs.size() < RELECTEURS_PAR_EXERCICE) {
+                    // Un seul pair éligible : l'exercice aura une note, mais pas
+                    // de moyenne. Le formateur doit le savoir maintenant.
+                    unSeulRelecteur++;
+                }
             }
             exercices.save(exercice);
         }
 
-        return new ResultatCloture(seance, assignees, nonAssignes);
+        return new ResultatCloture(seance, assignees, nonAssignes, unSeulRelecteur);
     }
 
     private String tirerUnCodeLibre() {

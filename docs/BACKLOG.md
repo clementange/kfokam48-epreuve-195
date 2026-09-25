@@ -24,7 +24,9 @@
 | 12 | L'étudiant remplace le lien de son exercice | [#12](https://github.com/clementange/kfokam48-epreuve-195/issues/12) | Should | EF10 | RG13 | v1.0 |
 | 13 | L'étudiant consulte la note et le commentaire reçus | [#13](https://github.com/clementange/kfokam48-epreuve-195/issues/13) | Should | EF11 | RG20 | v1.0 |
 | 14 | Le formateur distingue les exercices en attente de relecture | [#14](https://github.com/clementange/kfokam48-epreuve-195/issues/14) | Should | EF13 | RG16, RG21 | v1.0 |
-| 15 | Le système bloque un étudiant après cinq codes erronés | [#15](https://github.com/clementange/kfokam48-epreuve-195/issues/15) | Could | EF12 | RG7 | v1.0 si le temps le permet |
+| ~~15~~ | ~~Le système bloque un étudiant après cinq codes erronés~~ | [#15](https://github.com/clementange/kfokam48-epreuve-195/issues/15) | ~~Could~~ **abandonnée** | EF12 | RG7 | **sortie du périmètre à l'étape 3** |
+| 17 | Chaque exercice est relu par deux pairs différents | [#34](https://github.com/clementange/kfokam48-epreuve-195/issues/34) | **Must** | RG15 révisée | RG15, RG16, RG17 | v1.0 |
+| 18 | La note est la moyenne des deux relectures, provisoire si une seule | [#35](https://github.com/clementange/kfokam48-epreuve-195/issues/35) | **Must** | RG26 | RG22, RG26 | v1.0 |
 
 ## Pourquoi cet ordre
 
@@ -53,9 +55,14 @@ deux heures. C'est la première chose sacrifiée en cas de retard (cahier des ch
 EF12 → EF11 → EF13 → EF10 → EF9. Ne sont jamais sacrifiés : les migrations versionnées, les deux
 tests de B6, et la mise à jour de l'analyse après l'étape 3.
 
+**Appliqué à l'étape 3 :** le changement de besoin étant un `Must` tardif, **EF12 a été sacrifiée**,
+conformément à cet ordre écrit avant l'ouverture de l'enveloppe. EF11 et EF13 étaient déjà livrées ;
+le prochain sacrifice, s'il faut en faire un, serait EF9.
+
 ## Révisions
 
 | Quand | Ce qui a changé et pourquoi |
 |---|---|
 | 25/09/2026 | Backlog initial, 15 stories, avant tout code. Ouvert en issues #1 à #15 sur le dépôt |
+| 25/09/2026 | **Changement de besoin de l'étape 3.** Deux stories `Must` ajoutées (#34, #35) : deux relecteurs par exercice et moyenne des deux, ce qui casse RG15 issue de Q6. **Story 15 (EF12) sortie du périmètre** — elle était déjà `Could` et première de l'ordre de sacrifice inscrit au §10 avant même l'ouverture de l'enveloppe ; la menace de Q4 reste couverte par l'entropie du code et RG24. **Story 11 (EF9) maintenue mais repoussée** derrière le changement |
 | 25/09/2026 | **Périmètre élargi par le commanditaire après l'étape 1.** Story 10 renforcée — le démarrage passe à une seule commande, frontend conteneurisé compris (ENF6, ENF10, issue #10 réécrite). Story 16 ajoutée en `Must` — interface présentable (ENF9, issue #17). Aucune story existante n'est déclassée : le périmètre s'élargit, il ne se déplace pas |

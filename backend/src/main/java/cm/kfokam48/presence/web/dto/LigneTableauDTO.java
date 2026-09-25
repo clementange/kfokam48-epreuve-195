@@ -8,6 +8,10 @@ import java.math.RoundingMode;
 /**
  * Une ligne du tableau du formateur — les six champs imposés par le contrat.
  *
+ * <p>{@code moyenneProvisoire} vient du changement de besoin de l'étape 3 : tant
+ * qu'un exercice attend sa seconde relecture, la moyenne peut encore changer.
+ * Le client demande qu'elle soit « marquée comme provisoire ».
+ *
  * <p>La moyenne est arrondie à deux décimales ici, au plus près de la sortie :
  * 13.333333333 n'apporte rien à un formateur. L'arrondi est fait par l'API et
  * non par le frontend, parce que F3 interdit de dupliquer une règle métier côté
@@ -19,7 +23,8 @@ public record LigneTableauDTO(
         long presences,
         long exercicesDeposes,
         BigDecimal moyenne,
-        long relecturesEnAttente
+        long relecturesEnAttente,
+        boolean moyenneProvisoire
 ) {
     public static LigneTableauDTO de(LigneTableau l) {
         return new LigneTableauDTO(
@@ -32,6 +37,9 @@ public record LigneTableauDTO(
                 l.getMoyenne() == null
                         ? null
                         : BigDecimal.valueOf(l.getMoyenne()).setScale(2, RoundingMode.HALF_UP),
-                l.getRelecturesEnAttente());
+                l.getRelecturesEnAttente(),
+                // Issue #35 — au moins un exercice attend encore une seconde
+                // relecture : la moyenne peut changer, il faut le dire.
+                l.getExercicesPartiellementRelus() > 0);
     }
 }
