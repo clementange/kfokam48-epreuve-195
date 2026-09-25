@@ -7,23 +7,23 @@
 
 ## Priorisation
 
-| # | Story | Priorité | Exigence | Règles | Étape visée |
-|---|---|---|---|---|---|
-| 1 | Le formateur ouvre une session et obtient un code de présence | **Must** | EF1 | RG1, RG2 | v0.1 |
-| 2 | L'étudiant se désigne dans la liste de sa promotion | **Must** | EF3 | RG25, RG24 | v0.1 |
-| 3 | L'étudiant marque sa présence avec le code | **Must** | EF2 | RG1, RG3–RG6, RG24 | v0.1 |
-| 4 | Toute erreur de l'API répond `{ code, message }` | **Must** | ENF4 | B4 | v0.1 |
-| 5 | L'étudiant dépose le lien de son exercice | **Must** | EF4 | RG9, RG10, RG11, RG12 | v0.1 |
-| 6 | Le formateur clôture une session | **Must** | EF5 | RG6, RG12, RG14 | v0.1 |
-| 7 | Le système assigne un relecteur à chaque exercice déposé | **Must** | EF6 | RG15, RG16, RG17 | v0.1 |
-| 8 | Le relecteur rend sa note et son commentaire | **Must** | EF7 | RG17, RG18, RG19 | v0.1 |
-| 9 | Le formateur consulte le tableau récapitulatif de sa promotion | **Must** | EF8 | RG21, RG22, RG23 | v0.1 |
-| 10 | L'application démarre chez un tiers depuis un clone vierge | **Must** | ENF6 | — | v0.1 |
-| 11 | Le formateur ajoute une présence à la main | Should | EF9 | RG8, RG6 | v1.0 |
-| 12 | L'étudiant remplace le lien de son exercice | Should | EF10 | RG13 | v1.0 |
-| 13 | L'étudiant consulte la note et le commentaire reçus | Should | EF11 | RG20 | v1.0 |
-| 14 | Le formateur distingue les exercices en attente de relecture | Should | EF13 | RG16, RG21 | v1.0 |
-| 15 | Le système bloque un étudiant après cinq codes erronés | Could | EF12 | RG7 | v1.0 si le temps le permet |
+| # | Story | Issue | Priorité | Exigence | Règles | Étape visée |
+|---|---|---|---|---|---|---|
+| 1 | Le formateur ouvre une session et obtient un code de présence | [#1](https://github.com/clementange/kfokam48-epreuve-195/issues/1) | **Must** | EF1 | RG1, RG2 | v0.1 |
+| 2 | L'étudiant se désigne dans la liste de sa promotion | [#2](https://github.com/clementange/kfokam48-epreuve-195/issues/2) | **Must** | EF3 | RG25, RG24 | v0.1 |
+| 3 | L'étudiant marque sa présence avec le code | [#4](https://github.com/clementange/kfokam48-epreuve-195/issues/4) | **Must** | EF2 | RG1, RG3–RG6, RG24 | v0.1 |
+| 4 | Toute erreur de l'API répond `{ code, message }` | [#3](https://github.com/clementange/kfokam48-epreuve-195/issues/3) | **Must** | ENF4 | B4 | v0.1 |
+| 5 | L'étudiant dépose le lien de son exercice | [#5](https://github.com/clementange/kfokam48-epreuve-195/issues/5) | **Must** | EF4 | RG9, RG10, RG11, RG12 | v0.1 |
+| 6 | Le formateur clôture une session | [#6](https://github.com/clementange/kfokam48-epreuve-195/issues/6) | **Must** | EF5 | RG6, RG12, RG14 | v0.1 |
+| 7 | Le système assigne un relecteur à chaque exercice déposé | [#7](https://github.com/clementange/kfokam48-epreuve-195/issues/7) | **Must** | EF6 | RG15, RG16, RG17 | v0.1 |
+| 8 | Le relecteur rend sa note et son commentaire | [#8](https://github.com/clementange/kfokam48-epreuve-195/issues/8) | **Must** | EF7 | RG17, RG18, RG19 | v0.1 |
+| 9 | Le formateur consulte le tableau récapitulatif de sa promotion | [#9](https://github.com/clementange/kfokam48-epreuve-195/issues/9) | **Must** | EF8 | RG21, RG22, RG23 | v0.1 |
+| 10 | L'application démarre chez un tiers depuis un clone vierge | [#10](https://github.com/clementange/kfokam48-epreuve-195/issues/10) | **Must** | ENF6 | — | v0.1 |
+| 11 | Le formateur ajoute une présence à la main | [#11](https://github.com/clementange/kfokam48-epreuve-195/issues/11) | Should | EF9 | RG8, RG6 | v1.0 |
+| 12 | L'étudiant remplace le lien de son exercice | [#12](https://github.com/clementange/kfokam48-epreuve-195/issues/12) | Should | EF10 | RG13 | v1.0 |
+| 13 | L'étudiant consulte la note et le commentaire reçus | [#13](https://github.com/clementange/kfokam48-epreuve-195/issues/13) | Should | EF11 | RG20 | v1.0 |
+| 14 | Le formateur distingue les exercices en attente de relecture | [#14](https://github.com/clementange/kfokam48-epreuve-195/issues/14) | Should | EF13 | RG16, RG21 | v1.0 |
+| 15 | Le système bloque un étudiant après cinq codes erronés | [#15](https://github.com/clementange/kfokam48-epreuve-195/issues/15) | Could | EF12 | RG7 | v1.0 si le temps le permet |
 
 ## Pourquoi cet ordre
 
@@ -56,4 +56,4 @@ tests de B6, et la mise à jour de l'analyse après l'étape 3.
 
 | Quand | Ce qui a changé et pourquoi |
 |---|---|
-| 25/09/2026 | Backlog initial, 15 stories, avant tout code |
+| 25/09/2026 | Backlog initial, 15 stories, avant tout code. Ouvert en issues #1 à #15 sur le dépôt |
