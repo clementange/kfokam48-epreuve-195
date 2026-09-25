@@ -104,6 +104,16 @@ Un détail a demandé réflexion : le port 8080 est occupé sur ma machine par l
 
 ## Étape 5 — Soumission
 
-**Fait :**
+**Fait :** `SOUMISSION.md` rempli, lien et hash vérifiés, dépôt contrôlé public depuis l'extérieur.
+
+Un détail m'a arrêté au moment de remplir le hash : **un hash écrit dans le dépôt ne peut pas désigner le commit qui le contient** — l'inscrire le change. Le sujet le dit d'ailleurs dans cet ordre : « termine, pousse, puis copie son hash complet ». La version téléversée porte donc le hash relevé après le dernier `push`, et le fichier versionné explique pourquoi il ne peut pas le porter lui-même.
 
 **Ce que je referais autrement avec une journée de plus :**
+
+**Nommer toutes les contraintes dès la première migration.** C'est le seul regret technique net de la journée. `exercice_id BIGINT NOT NULL UNIQUE` m'a coûté trois tentatives et près d'une heure à l'étape 3, parce qu'une contrainte déclarée en ligne reçoit un nom généré, différent sur H2 et sur PostgreSQL. Cinq caractères de plus dans V1 et le problème n'existait pas.
+
+**Écrire le test avant le code sur les règles de gestion, pas seulement après.** Les défauts que j'ai trouvés — la note tronquée, CORS, le `catch` trop large — l'ont tous été en exécutant, jamais en relisant. J'ai eu le réflexe de vérifier, mais après coup. Partir du test aurait rendu certains de ces défauts impossibles plutôt que détectables.
+
+**Vérifier l'application dans un navigateur plus tôt.** CORS manquait depuis le premier endpoint. 184 tests verts et `curl` à `200` ne le montraient pas, et il aurait rendu l'application entièrement muette. Je ne l'ai vu qu'en lançant Docker, tard. Une page ouverte dès le deuxième jour m'aurait épargné ce risque.
+
+**Ce dont je suis satisfait :** avoir dit que le bug de l'étape 3 n'était pas reproductible, plutôt que d'écrire un correctif qui en aurait eu l'air. Le vrai défaut trouvé à côté valait mieux qu'une réponse de façade — et il donnait exactement le message que le client avait vu.

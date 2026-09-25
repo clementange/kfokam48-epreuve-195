@@ -92,7 +92,7 @@ cd backend && ./mvnw test
 | 2 — Première version (`Must`) | **terminée** — jalon `[JALON] v0.1` |
 | 3 — Enveloppe | **terminée** — bug et changement de besoin, deux PR séparées |
 | 4 — Version finale | **terminée** — jalon `[JALON] v1.0` |
-| 5 — Soumission | en cours |
+| 5 — Soumission | **terminée** |
 
 ## Structure
 
