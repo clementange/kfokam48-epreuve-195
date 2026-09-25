@@ -68,9 +68,28 @@ public class Exercice {
         this.statut = StatutExercice.NON_ASSIGNE;
     }
 
-    /** RG18 — la relecture a été rendue. */
-    public void marquerRelu() {
-        this.statut = StatutExercice.RELU;
+    /**
+     * Met le statut à jour après qu'une relecture a été rendue (issue #35).
+     *
+     * <p>C'est le <em>reste à rendre</em> qui décide, et non le nombre de notes
+     * reçues : un exercice qui n'avait qu'un relecteur éligible est définitif dès
+     * sa première note, alors qu'un exercice à deux relecteurs reste provisoire
+     * tant que le second n'a pas répondu.
+     *
+     * @param relecturesEnAttente relectures assignées non encore rendues
+     */
+    public void mettreAJourApresRelecture(long relecturesEnAttente) {
+        this.statut = relecturesEnAttente > 0
+                ? StatutExercice.PARTIELLEMENT_RELU
+                : StatutExercice.RELU;
+    }
+
+    /**
+     * RG22 révisée — la note est provisoire tant qu'une relecture assignée n'a
+     * pas été rendue. Le client demande qu'elle soit « marquée comme provisoire ».
+     */
+    public boolean noteProvisoire() {
+        return statut == StatutExercice.PARTIELLEMENT_RELU;
     }
 
     public Long getId() {

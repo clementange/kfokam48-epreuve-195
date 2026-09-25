@@ -85,9 +85,18 @@ public class RelectureService {
         }
 
         relecture.rendre(note.intValueExact(), commentaire, horloge.instant());
-        exercice.marquerRelu();
+        relectures.saveAndFlush(relecture);
+
+        // Issue #35 — le statut dépend de ce qu'il RESTE à rendre, pas du nombre
+        // de notes reçues. Un exercice à un seul relecteur est définitif dès sa
+        // première note ; un exercice à deux reste provisoire tant que le second
+        // n'a pas répondu.
+        long resteARendre = relectures.countByExerciceIdAndStatut(
+                exercice.getId(), StatutRelecture.EN_ATTENTE);
+        exercice.mettreAJourApresRelecture(resteARendre);
         exercices.save(exercice);
-        return relectures.save(relecture);
+
+        return relecture;
     }
 
     /** Écran relecteur : les relectures qui m'ont été assignées. */
@@ -128,19 +137,46 @@ public class RelectureService {
 
         List<Exercice> miens = exercices.findByEtudiantIdOrderByDeposeAtDesc(etudiantId);
         Map<Long, String> titres = titresDesSeances(miens);
-        Map<Long, Relecture> relectureParExercice = miens.stream()
-                .map(e -> relectures.findByExerciceId(e.getId()).orElse(null))
-                .filter(Objects::nonNull)
-                .collect(Collectors.toMap(Relecture::getExerciceId, Function.identity()));
+
+        // Un exercice a plusieurs relectures depuis l'issue #34 : on les charge
+        // toutes en une requête plutôt qu'une par exercice.
+        Map<Long, List<Relecture>> parExercice = relectures
+                .findByExerciceIdIn(miens.stream().map(Exercice::getId).toList())
+                .stream()
+                .collect(Collectors.groupingBy(Relecture::getExerciceId));
 
         return miens.stream().map(e -> {
-            Relecture r = relectureParExercice.get(e.getId());
+            List<Relecture> rendues = parExercice.getOrDefault(e.getId(), List.of()).stream()
+                    .filter(Relecture::estRendue)
+                    .toList();
+
+            // Issue #35 — « la note retenue est la moyenne des deux ». Avec une
+            // seule relecture rendue, c'est sa note, marquée provisoire.
+            Double note = rendues.isEmpty() ? null
+                    : rendues.stream().mapToInt(Relecture::getNote).average().orElseThrow();
+
+            // Les commentaires des deux relecteurs sont présentés ensemble, sans
+            // jamais dire qui a écrit quoi : Q8 protège l'anonymat du relecteur.
+            String commentaires = rendues.isEmpty() ? null
+                    : rendues.stream().map(Relecture::getCommentaire)
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.joining("\n\n"));
+
             return new MonExerciceDTO(
                     e.getId(), e.getSessionId(), titres.get(e.getSessionId()),
                     e.getLien(), e.getStatut(),
-                    r == null ? null : r.getNote(),
-                    r == null ? null : r.getCommentaire());
+                    note == null ? null : arrondir(note),
+                    commentaires,
+                    e.noteProvisoire(),
+                    rendues.size(),
+                    parExercice.getOrDefault(e.getId(), List.of()).size());
         }).toList();
+    }
+
+    /** Deux décimales, comme le tableau du formateur : la moyenne vient de l'API (F3). */
+    private static java.math.BigDecimal arrondir(double valeur) {
+        return java.math.BigDecimal.valueOf(valeur)
+                .setScale(2, java.math.RoundingMode.HALF_UP);
     }
 
     private Map<Long, Exercice> chargerExercices(List<Long> ids) {

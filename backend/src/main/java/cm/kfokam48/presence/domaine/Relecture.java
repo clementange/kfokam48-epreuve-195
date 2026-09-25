@@ -25,7 +25,12 @@ public class Relecture {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "exercice_id", nullable = false, unique = true)
+    /**
+     * L'unicité ne porte plus sur cette seule colonne depuis la migration V4 :
+     * un exercice a deux relecteurs (issue #34). Elle porte désormais sur le
+     * couple (exercice, relecteur) — un même pair ne relit pas deux fois.
+     */
+    @Column(name = "exercice_id", nullable = false)
     private Long exerciceId;
 
     @Column(name = "relecteur_id", nullable = false)

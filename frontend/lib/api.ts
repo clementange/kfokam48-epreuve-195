@@ -74,7 +74,12 @@ const put = <T>(chemin: string, corps: unknown) =>
 // --- Types du contrat -------------------------------------------------------
 
 export type StatutSession = 'OUVERTE' | 'CLOTUREE';
-export type StatutExercice = 'DEPOSE' | 'EN_ATTENTE_RELECTURE' | 'RELU' | 'NON_ASSIGNE';
+export type StatutExercice =
+  | 'DEPOSE'
+  | 'EN_ATTENTE_RELECTURE'
+  | 'PARTIELLEMENT_RELU'
+  | 'RELU'
+  | 'NON_ASSIGNE';
 export type StatutRelecture = 'EN_ATTENTE' | 'RENDUE';
 export type Source = 'ETUDIANT' | 'FORMATEUR';
 
@@ -105,6 +110,8 @@ export type Cloture = {
   clotureAt: string;
   relecturesAssignees: number;
   exercicesNonAssignes: number;
+  /** Exercices n'ayant trouvé qu'un seul pair éligible : une note, pas une moyenne. */
+  exercicesUnSeulRelecteur: number;
 };
 
 export type Presence = { id: number; sessionId: number; etudiantId: number; source: Source };
@@ -127,8 +134,13 @@ export type MonExercice = {
   sessionTitre: string;
   lien: string;
   statut: StatutExercice;
+  /** Moyenne des relectures rendues — décimale depuis le passage à deux relecteurs. */
   note: number | null;
   commentaire: string | null;
+  /** Une relecture assignée n'a pas encore été rendue : la moyenne peut changer (RG26). */
+  provisoire: boolean;
+  relecturesRendues: number;
+  relecturesAttendues: number;
 };
 
 export type RelectureAssignee = {
@@ -156,6 +168,8 @@ export type LigneTableau = {
   exercicesDeposes: number;
   moyenne: number | null;
   relecturesEnAttente: number;
+  /** Au moins un exercice attend sa seconde relecture : la moyenne peut changer. */
+  moyenneProvisoire: boolean;
 };
 
 // --- Opérations -------------------------------------------------------------
