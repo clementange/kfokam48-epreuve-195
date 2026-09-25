@@ -185,6 +185,9 @@ export const api = {
 
   marquerPresence: (code: string, etudiantId: number) =>
     post<Presence>('/api/presences', { code, etudiantId }),
+  /** EF9, Q14 — le recours du formateur quand le code ne marche pas pour quelqu'un. */
+  ajouterPresenceManuelle: (sessionId: number, etudiantId: number) =>
+    post<Presence>('/api/presences/manuelles', { sessionId, etudiantId }),
 
   deposerExercice: (sessionId: number, etudiantId: number, lien: string) =>
     post<ExerciceDepose>('/api/exercices', { sessionId, etudiantId, lien }),

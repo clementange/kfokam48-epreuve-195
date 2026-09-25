@@ -79,6 +79,44 @@ public class PresenceService {
         return enregistrer(Presence.marqueeParEtudiant(seance.getId(), etudiantId, maintenant));
     }
 
+    /**
+     * EF9, RG8 — le formateur ajoute une présence à la main.
+     *
+     * <p>Q14 : « ça arrive qu'un étudiant ait un souci de téléphone. Mais il faut
+     * que ça se voie : marquez "ajouté par le formateur". » D'où la source
+     * {@code FORMATEUR}, qui est visible jusque sur l'écran.
+     *
+     * <p><b>L'expiration du code ne s'applique pas ici</b>, et c'est délibéré :
+     * cette opération est le recours prévu quand le code ne marche plus. La
+     * refuser au motif que le code a expiré la viderait de son sens. La clôture,
+     * elle, reste bloquante — une séance close ne reçoit plus rien (RG6).
+     */
+    @Transactional
+    public Presence ajouterParFormateur(Long sessionId, Long etudiantId) {
+        Etudiant etudiant = referentiel.exigerEtudiantExistant(etudiantId);
+
+        Session seance = sessions.findById(sessionId)
+                .orElseThrow(() -> new ErreurMetier(CodeErreur.SESSION_INCONNUE));
+
+        // RG24 — le formateur ne peut pas inscrire un étudiant d'une autre
+        // promotion. Ici le message est explicite, contrairement au marquage par
+        // code : le formateur a le droit de savoir pourquoi c'est refusé, il
+        // n'est pas en train de deviner un code.
+        if (!etudiant.appartientA(seance.getPromotionId())) {
+            throw new ErreurMetier(CodeErreur.ETUDIANT_HORS_PROMOTION);
+        }
+
+        if (seance.estCloturee()) {
+            throw new ErreurMetier(CodeErreur.SESSION_CLOTUREE);
+        }
+
+        if (presences.existsBySessionIdAndEtudiantId(sessionId, etudiantId)) {
+            throw new ErreurMetier(CodeErreur.DEJA_PRESENT);
+        }
+
+        return enregistrer(Presence.ajouteeParFormateur(sessionId, etudiantId, horloge.instant()));
+    }
+
     /** RG6 puis RG1/RG5 — l'ordre compte, voir la documentation de la classe. */
     private void exigerSeanceRecevable(Session seance, Instant maintenant) {
         if (seance.estCloturee()) {

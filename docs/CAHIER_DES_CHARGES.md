@@ -1,6 +1,6 @@
 # Cahier des charges — Présence & Relecture KFOKAM48
 
-**Auteur :** Ange Clément · matricule **195**
+**Auteur :** Kengne Ange Clément · matricule **195**
 **Version :** 3 · **Date :** 25 septembre 2026
 **Frontend choisi :** **Next.js**, parce que son routage par fichiers donne gratuitement les trois écrans imposés (F2) et que son découpage `app/` / `services/` impose naturellement la couche d'appels API exigée par F3.
 
