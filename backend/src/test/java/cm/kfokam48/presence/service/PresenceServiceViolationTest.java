@@ -95,11 +95,13 @@ class PresenceServiceViolationTest {
                         "could not execute statement [ERROR: insert or update on table \"presence\" "
                                 + "violates foreign key constraint \"fk_presence_session\"]"));
 
+        // La violation est relancée telle quelle : elle finira en
+        // 500 ERREUR_INTERNE, avec la trace côté serveur. Une panne doit se voir
+        // comme une panne, pas se déguiser en message métier rassurant.
         assertThatThrownBy(() -> service.marquer(CODE, ETUDIANT))
-                .isInstanceOf(ErreurMetier.class)
-                .satisfies(e -> assertThat(((ErreurMetier) e).code())
-                        .as("le service ne doit pas prétendre que l'étudiant était déjà présent")
-                        .isNotEqualTo(CodeErreur.DEJA_PRESENT));
+                .as("le service ne doit pas prétendre que l'étudiant était déjà présent")
+                .isInstanceOf(DataIntegrityViolationException.class)
+                .isNotInstanceOf(ErreurMetier.class);
     }
 
     @Test
@@ -111,8 +113,22 @@ class PresenceServiceViolationTest {
                                 + "violates check constraint \"ck_presence_source\"]"));
 
         assertThatThrownBy(() -> service.marquer(CODE, ETUDIANT))
-                .isInstanceOf(ErreurMetier.class)
-                .satisfies(e -> assertThat(((ErreurMetier) e).code())
-                        .isNotEqualTo(CodeErreur.DEJA_PRESENT));
+                .isInstanceOf(DataIntegrityViolationException.class)
+                .isNotInstanceOf(ErreurMetier.class);
+    }
+
+    @Test
+    @DisplayName("le nom de la contrainte du code correspond à celui de la migration V1")
+    void nomDeContrainteAligneSurLaMigration() throws Exception {
+        // Le service distingue les violations par le nom de la contrainte. Si ce
+        // nom change en base sans changer ici, le bug corrigé revient en silence :
+        // toute violation redeviendrait « déjà présent ». Ce test lit la migration
+        // et refuse la divergence.
+        String migration = java.nio.file.Files.readString(
+                java.nio.file.Path.of("src/main/resources/db/migration/V1__schema_initial.sql"));
+
+        assertThat(migration)
+                .as("la contrainte nommée dans PresenceService doit exister dans la migration")
+                .contains(PresenceService.CONTRAINTE_UNICITE_PRESENCE);
     }
 }
