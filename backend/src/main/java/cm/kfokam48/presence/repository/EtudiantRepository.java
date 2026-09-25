@@ -25,7 +25,13 @@ public interface EtudiantRepository extends JpaRepository<Etudiant, Long> {
      *       est {@code nullable}. Un {@code COALESCE(…, 0)} afficherait 0/20 à un
      *       étudiant qui n'a simplement pas encore été relu.</li>
      *   <li>La moyenne ne porte que sur les relectures {@code RENDUE} : une
-     *       relecture en attente n'a pas de note, elle ne doit pas peser.</li>
+     *       relecture en attente n'a pas de note, elle ne doit pas peser. Depuis
+     *       l'issue #34 un exercice en a deux, et l'{@code AVG} les prend toutes
+     *       — « la note retenue est la moyenne des deux » s'obtient donc sans
+     *       changer la requête, en moyennant les notes plutôt que les exercices.</li>
+     *   <li><b>Issue #35</b> — {@code exercicesPartiellementRelus} compte les
+     *       exercices dont une relecture est rendue et l'autre pas. Tant qu'il
+     *       n'est pas nul, la moyenne affichée est <b>provisoire</b>.</li>
      *   <li><b>RG21</b> — {@code relectures_en_attente} compte les relectures dont
      *       l'étudiant est le <b>relecteur</b>, pas celles qu'il attend en tant
      *       qu'auteur. C'est ce que Q16 demande : « les relectures qu'il doit
@@ -49,7 +55,10 @@ public interface EtudiantRepository extends JpaRepository<Etudiant, Long> {
                        AND r.statut = 'RENDUE')                        AS moyenne,
                    (SELECT COUNT(*) FROM relecture rr
                      WHERE rr.relecteur_id = e.id
-                       AND rr.statut = 'EN_ATTENTE')                   AS relecturesEnAttente
+                       AND rr.statut = 'EN_ATTENTE')                   AS relecturesEnAttente,
+                   (SELECT COUNT(*) FROM exercice xp
+                     WHERE xp.etudiant_id = e.id
+                       AND xp.statut = 'PARTIELLEMENT_RELU')           AS exercicesPartiellementRelus
               FROM etudiant e
              WHERE e.promotion_id = :promotionId
              ORDER BY e.nom

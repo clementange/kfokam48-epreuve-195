@@ -90,8 +90,9 @@ cd backend && ./mvnw test
 |---|---|
 | 1 — Analyse, spécification, conception | **terminée** — jalon `[JALON] analyse` posé |
 | 2 — Première version (`Must`) | **terminée** — jalon `[JALON] v0.1` |
-| 3 — Enveloppe | **en cours** |
-| 4 — Version finale | à venir |
+| 3 — Enveloppe | **terminée** — bug et changement de besoin, deux PR séparées |
+| 4 — Version finale | **terminée** — jalon `[JALON] v1.0` |
+| 5 — Soumission | en cours |
 
 ## Structure
 
@@ -111,7 +112,8 @@ frontend/ Next.js
 | [`docs/diagrammes/D2-modele-donnees.md`](docs/diagrammes/D2-modele-donnees.md) | Le modèle de données — **fait foi pour les migrations** |
 | [`docs/diagrammes/D3-sequence-marquer-presence.md`](docs/diagrammes/D3-sequence-marquer-presence.md) | « Marquer sa présence », cas nominal et six cas d'erreur — **fait foi pour les codes HTTP** |
 | [`docs/diagrammes/D4-etats-exercice.md`](docs/diagrammes/D4-etats-exercice.md) | Le cycle de vie d'un exercice |
-| [`docs/BACKLOG.md`](docs/BACKLOG.md) | Les 15 stories et l'ordre de traitement assumé |
+| [`docs/BACKLOG.md`](docs/BACKLOG.md) | Les stories, l'ordre de traitement assumé, et ce qui est sorti du périmètre |
+| [`CHANGELOG.md`](CHANGELOG.md) | Ce qui a été livré, corrigé et abandonné, avec le renvoi à chaque issue et pull request |
 | [`api/contrat.yaml`](api/contrat.yaml) | Les 5 opérations imposées, reprises à l'identique, et les 8 opérations ajoutées avec leur justification |
 | [`docs/JOURNAL.md`](docs/JOURNAL.md) | Le journal de bord, une entrée par étape |
 

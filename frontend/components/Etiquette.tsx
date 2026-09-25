@@ -21,6 +21,9 @@ function Etiquette({ ton, children }: { ton: Ton; children: React.ReactNode }) {
 const EXERCICE: Record<StatutExercice, { ton: Ton; libelle: string }> = {
   DEPOSE: { ton: 'info', libelle: 'Déposé' },
   EN_ATTENTE_RELECTURE: { ton: 'attente', libelle: 'En attente de relecture' },
+  // Orange comme « en attente » : il manque encore quelqu'un. La note existe
+  // mais elle n'est pas figée (RG26).
+  PARTIELLEMENT_RELU: { ton: 'attente', libelle: 'Relu par 1 pair sur 2' },
   RELU: { ton: 'succes', libelle: 'Relu' },
   // Rouge, parce que c'est une impasse : personne ne le notera jamais (RG16).
   NON_ASSIGNE: { ton: 'danger', libelle: 'Aucun relecteur disponible' },
@@ -60,10 +63,28 @@ export function SourceEtiquette({ source }: { source: Source }) {
   );
 }
 
-/** RG22 — une moyenne absente s'écrit « — », jamais 0 : ce n'est pas la même chose. */
-export function Moyenne({ valeur }: { valeur: number | null }) {
+/**
+ * RG22 — une moyenne absente s'écrit « — », jamais 0 : ce n'est pas la même chose.
+ *
+ * RG26 — une note provisoire est signalée explicitement. Le client l'a demandé
+ * mot pour mot : « on affiche sa note en attendant, mais marquée comme
+ * provisoire ». Sans cette mention, l'étudiant croirait sa note définitive.
+ */
+export function Moyenne({ valeur, provisoire }: { valeur: number | null; provisoire?: boolean }) {
   if (valeur === null || valeur === undefined) {
     return <span className="sans-valeur" title="Aucune note reçue pour l'instant">—</span>;
   }
-  return <strong>{valeur.toFixed(2).replace('.', ',')} / 20</strong>;
+  return (
+    <>
+      <strong>{valeur.toFixed(2).replace('.', ',')} / 20</strong>
+      {provisoire && (
+        <>
+          {' '}
+          <span className="etiquette attente" title="Une seconde relecture est attendue : cette note peut encore changer">
+            provisoire
+          </span>
+        </>
+      )}
+    </>
+  );
 }

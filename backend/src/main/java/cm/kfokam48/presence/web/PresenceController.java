@@ -2,6 +2,7 @@ package cm.kfokam48.presence.web;
 
 import cm.kfokam48.presence.service.PresenceService;
 import cm.kfokam48.presence.web.dto.MarquerPresenceRequete;
+import cm.kfokam48.presence.web.dto.PresenceManuelleRequete;
 import cm.kfokam48.presence.web.dto.PresenceDTO;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -28,5 +29,18 @@ public class PresenceController {
     @ResponseStatus(HttpStatus.CREATED)
     public PresenceDTO marquer(@RequestBody @Valid MarquerPresenceRequete requete) {
         return PresenceDTO.de(service.marquer(requete.code(), requete.etudiantId()));
+    }
+
+    /**
+     * EF9, RG8 — {@code POST /api/presences/manuelles} → {@code 201} avec
+     * {@code source: "FORMATEUR"}.
+     *
+     * <p>Opération ajoutée au contrat, née de Q14.
+     */
+    @PostMapping("/manuelles")
+    @ResponseStatus(HttpStatus.CREATED)
+    public PresenceDTO ajouterParFormateur(@RequestBody @Valid PresenceManuelleRequete requete) {
+        return PresenceDTO.de(
+                service.ajouterParFormateur(requete.sessionId(), requete.etudiantId()));
     }
 }

@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Présence & Relecture KFOKAM48 — contrat d'API
-  version: "1.1"
+  version: "2.0"
   description: |
     Contrat de l'application de suivi de présence et de relecture par les pairs
     de la formation KFOKAM48.
@@ -52,6 +52,26 @@ info:
         code en 404 sur GET /api/tableau. Un même code d'erreur ne peut pas valoir
         404 là et 400 ici — la cohérence « un code, un statut » prime, sans quoi un
         client ne peut pas traiter les erreurs de façon uniforme.
+
+    ## Revision 2.0 — changement de besoin de l'etape 3
+
+    Le client revient sur Q6 : chaque exercice est desormais relu par DEUX pairs
+    differents, et la note retenue est la moyenne des deux. Si un seul des deux a
+    rendu, sa note est affichee mais marquee comme provisoire.
+
+    La forme de trois reponses change, et ces changements sont des AJOUTS de
+    champs — aucun champ existant n'est retire ni renomme :
+
+      - GET /api/tableau ............ + moyenneProvisoire (booleen)
+      - GET /api/etudiants/{id}/exercices
+                                      note devient la MOYENNE des relectures
+                                      rendues, donc decimale et non plus entiere ;
+                                      + provisoire, relecturesRendues,
+                                      relecturesAttendues
+      - POST /api/sessions/{id}/cloture
+                                      + exercicesUnSeulRelecteur, pour distinguer
+                                      un exercice qui aura une note d'un exercice
+                                      qui aura une moyenne
 
     ## Conventions
 
@@ -186,13 +206,21 @@ paths:
                   relecturesAssignees: { type: integer }
                   exercicesNonAssignes:
                     type: integer
-                    description: Exercices sans relecteur éligible (RG16)
+                    description: Exercices sans aucun relecteur éligible (RG16)
+                  exercicesUnSeulRelecteur:
+                    type: integer
+                    description: |
+                      AJOUT 2.0 — exercices n'ayant trouvé qu'un seul pair éligible.
+                      Ils recevront une note, mais pas une moyenne. Les distinguer
+                      évite que le formateur prenne cette note pour le résultat de
+                      deux relectures concordantes.
               example:
                 id: 42
                 statut: CLOTUREE
                 clotureAt: "2026-09-25T12:05:00Z"
-                relecturesAssignees: 11
+                relecturesAssignees: 22
                 exercicesNonAssignes: 0
+                exercicesUnSeulRelecteur: 1
         "404": { $ref: "#/components/responses/Erreur" }   # SESSION_INCONNUE
         "409": { $ref: "#/components/responses/Erreur" }   # SESSION_DEJA_CLOTUREE
 
@@ -439,6 +467,11 @@ paths:
                     exercicesDeposes: { type: integer }
                     moyenne: { type: number, nullable: true }
                     relecturesEnAttente: { type: integer }
+                    moyenneProvisoire:
+                      type: boolean
+                      description: |
+                        AJOUT 2.0 — au moins un exercice de cet étudiant attend
+                        encore sa seconde relecture : la moyenne peut changer.
               example:
                 - etudiantId: 7
                   nom: "Awono Marie"
@@ -446,12 +479,14 @@ paths:
                   exercicesDeposes: 9
                   moyenne: 14.5
                   relecturesEnAttente: 2
+                  moyenneProvisoire: true
                 - etudiantId: 9
                   nom: "Bello Idriss"
                   presences: 3
                   exercicesDeposes: 0
                   moyenne: null
                   relecturesEnAttente: 0
+                  moyenneProvisoire: false
         "404": { $ref: "#/components/responses/Erreur" }   # PROMOTION_INCONNUE
 
   # ---------------------------------------------------------------------------
@@ -591,10 +626,12 @@ components:
 
     StatutExercice:
       type: string
-      enum: [DEPOSE, EN_ATTENTE_RELECTURE, RELU, NON_ASSIGNE]
+      enum: [DEPOSE, EN_ATTENTE_RELECTURE, PARTIELLEMENT_RELU, RELU, NON_ASSIGNE]
       description: |
         Cycle de vie décrit par le diagramme D4.
-        NON_ASSIGNE - aucun relecteur éligible à la clôture (RG16).
+        PARTIELLEMENT_RELU - une relecture sur deux rendue, note provisoire (RG26).
+        RELU               - toutes les relectures assignées ont été rendues.
+        NON_ASSIGNE        - aucun relecteur éligible à la clôture (RG16).
 
     StatutRelecture:
       type: string
@@ -657,8 +694,12 @@ components:
     MonExercice:
       type: object
       description: |
-        Ce que voit l'auteur d'un exercice. Aucun champ n'identifie le relecteur (Q8, RG20).
-      required: [exerciceId, sessionId, sessionTitre, lien, statut]
+        Ce que voit l'auteur d'un exercice. Aucun champ n'identifie un relecteur
+        (Q8, RG20) : les commentaires des deux relecteurs sont presentes ensemble,
+        sans dire qui a ecrit quoi.
+      required:
+        [exerciceId, sessionId, sessionTitre, lien, statut, provisoire,
+         relecturesRendues, relecturesAttendues]
       properties:
         exerciceId: { type: integer, format: int64 }
         sessionId: { type: integer, format: int64 }
@@ -666,10 +707,23 @@ components:
         lien: { type: string, format: uri }
         statut: { $ref: "#/components/schemas/StatutExercice" }
         note:
-          type: integer
+          type: number
           nullable: true
-          description: null tant que la relecture n'est pas rendue
-        commentaire: { type: string, nullable: true }
+          description: |
+            MODIFIE 2.0 — moyenne des relectures rendues, donc decimale. Etait un
+            entier tant qu'il n'y avait qu'un relecteur. null si aucune rendue.
+        commentaire:
+          type: string
+          nullable: true
+          description: Commentaires des relecteurs, presentes ensemble et anonymement
+        provisoire:
+          type: boolean
+          description: |
+            AJOUT 2.0 — RG26. Une relecture assignee n'a pas encore ete rendue :
+            la moyenne peut changer. Faux des que toutes ont ete rendues, y compris
+            lorsqu'il n'y en avait qu'une faute de pair eligible.
+        relecturesRendues: { type: integer }
+        relecturesAttendues: { type: integer }
 
   responses:
     Erreur:
