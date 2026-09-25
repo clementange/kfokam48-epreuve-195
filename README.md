@@ -9,6 +9,81 @@ lit dans un tableau unique qui était là, qui a rendu et quelle moyenne chacun 
 
 ---
 
+## Démarrer l'application
+
+**Une seule commande.** Il faut Docker, et rien d'autre — ni Java, ni Node, ni PostgreSQL.
+
+```bash
+git clone https://github.com/clementange/kfokam48-epreuve-195.git
+cd kfokam48-epreuve-195
+docker compose up --build
+```
+
+Puis ouvrir **<http://localhost:3000>**.
+
+| Service | Adresse |
+|---|---|
+| Application | <http://localhost:3000> |
+| API | <http://localhost:8080> |
+| Base PostgreSQL | interne au réseau Docker, non exposée |
+
+Le premier lancement construit les images et prend quelques minutes. Les suivants démarrent en
+quelques secondes.
+
+### Ce que vous trouverez en arrivant
+
+**L'application est déjà peuplée** : aucune manipulation n'est nécessaire pour voir des données.
+Le jeu de démonstration est chargé par une migration, au premier démarrage.
+
+| Écran | Ce qu'il y a à voir |
+|---|---|
+| **Formateur** | Trois séances, dont une encore ouverte. Le tableau montre des moyennes, des moyennes absentes (« — »), et des relectures en attente |
+| **Étudiant** | Choisissez *Awono Marie* : deux exercices, dont un relu avec sa note et son commentaire |
+| **Relecteur** | Choisissez *Awono Marie* ou *Bello Idriss* : chacun a une relecture à rendre |
+
+Le jeu est construit pour que **chaque statut soit visible sans rien faire**, y compris les deux
+cas que le client n'avait pas prévus : un exercice `Aucun relecteur disponible` (RG16, séance 11)
+et des relectures jamais rendues (RG21, séance 10).
+
+Pour essayer le parcours complet : la séance 12 est ouverte mais **son code est expiré** — c'est
+volontaire, cela montre que le dépôt reste possible après expiration (Q12) alors que le marquage
+de présence ne l'est plus (RG5). Ouvrez une nouvelle séance depuis l'écran formateur pour obtenir
+un code valide.
+
+### Si un port est déjà pris
+
+Le contrat d'API fixe l'adresse `http://localhost:8080`, qui est donc le défaut. Si ce port est
+occupé sur votre machine :
+
+```bash
+PORT_API=8081 API_URL_NAVIGATEUR=http://localhost:8081 docker compose up --build
+```
+
+`API_URL_NAVIGATEUR` doit accompagner `PORT_API` : Next remplace les variables `NEXT_PUBLIC_*`
+**à la compilation**, et c'est l'adresse vue depuis votre navigateur qui compte — pas le nom de
+service Docker, inconnu en dehors du réseau interne. `PORT_WEB` et `ORIGINE_WEB` font de même
+pour le frontend.
+
+### Repartir de zéro
+
+```bash
+docker compose down -v    # -v supprime aussi le volume de la base
+docker compose up --build
+```
+
+### Développer sans Docker
+
+```bash
+cd backend  && ./mvnw spring-boot:run   # nécessite un PostgreSQL local
+cd frontend && npm install && npm run dev
+```
+
+Les tests, eux, ne demandent rien : ils tournent sur H2 en mémoire.
+
+```bash
+cd backend && ./mvnw test
+```
+
 ## État du dépôt
 
 | Étape | État |
@@ -17,10 +92,6 @@ lit dans un tableau unique qui était là, qui a rendu et quelle moyenne chacun 
 | 2 — Première version (`Must`) | **en cours** |
 | 3 — Enveloppe | à venir |
 | 4 — Version finale | à venir |
-
-> L'installation et le démarrage seront documentés ici à l'étape 4, **testés depuis un clone
-> vierge dans un dossier vide**. Il n'y a volontairement aucune ligne de code dans ce dépôt
-> avant le commit `[JALON] analyse`.
 
 ## Structure
 
