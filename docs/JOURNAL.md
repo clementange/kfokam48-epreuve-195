@@ -88,11 +88,17 @@ Ce qu'on perd : rien de fonctionnel. Le risque réel est un abus de ressources s
 
 ## Étape 4 — Version finale
 
-**Fait :**
+**Fait :** dernière story du backlog livrée — EF9, la présence ajoutée à la main (#11) —, `CHANGELOG.md` écrit à partir de l'historique réel, README vérifié **depuis un clone vierge dans un dossier vide**, backlog trié, jalon `[JALON] v1.0`.
 
-**Bloqué :**
+EF9 a survécu au sacrifice de l'étape 3 pour une raison concrète : tout existait déjà depuis la migration V1 — la colonne `source`, le `CHECK`, le DTO, l'étiquette « Ajouté par le formateur » à l'écran. Seule l'opération manquait. Le coût était faible et le trou fonctionnel réel : sans elle, un formateur n'a aucun recours quand le code ne marche pas pour quelqu'un.
 
-**IA :**
+**Bloqué :** rien de sérieux à cette étape, et c'est le résultat des précédentes plus qu'une réussite en soi. Le seul point à surveiller était le `docker compose up --build` depuis un clone : je l'ai fait dans un dossier vide, sur un clone frais du dépôt distant, pour ne pas me fier à un cache local ou à un fichier non versionné que j'aurais oublié d'ajouter.
+
+Un détail a demandé réflexion : le port 8080 est occupé sur ma machine par le Keycloak d'un autre projet. Plutôt que de l'arrêter — ce n'est pas mon service — j'ai rendu les ports paramétrables dès l'étape 2. Cela s'est avéré utile deux fois : pour mes propres tests, et parce que le correcteur peut très bien être dans le même cas.
+
+**IA :** peu sollicitée ici, le travail était surtout de la vérification. Elle a rédigé une première version du `CHANGELOG` à partir des messages de commit ; je l'ai reprise sur un point de fond. Elle présentait le bug de l'étape 3 comme corrigé, sans mentionner que **le symptôme signalé par le client n'avait pas été reproduit**. C'est précisément ce qu'il fallait écrire : un correctif qui a l'air de répondre à un bug inexistant vaut moins qu'un constat honnête accompagné du vrai défaut trouvé à côté.
+
+**Ce que je referais autrement :** nommer **toutes** les contraintes dans la migration initiale. Celle de `relecture` était déclarée en ligne — `exercice_id BIGINT NOT NULL UNIQUE` — donc nommée par le moteur, avec un nom différent sur H2 et sur PostgreSQL. C'est ce qui a transformé une modification de cinq lignes en trois tentatives et près d'une heure à l'étape 3.
 
 ---
 
