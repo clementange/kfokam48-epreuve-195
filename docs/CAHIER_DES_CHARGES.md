@@ -1,7 +1,7 @@
 # Cahier des charges — Présence & Relecture KFOKAM48
 
 **Auteur :** Ange Clément · matricule **195**
-**Version :** 1 · **Date :** 25 septembre 2026
+**Version :** 2 · **Date :** 25 septembre 2026
 **Frontend choisi :** **Next.js**, parce que son routage par fichiers donne gratuitement les trois écrans imposés (F2) et que son découpage `app/` / `services/` impose naturellement la couche d'appels API exigée par F3.
 
 ---
@@ -37,7 +37,9 @@ L'objectif n'est pas de noter à la place du formateur, mais de faire porter la 
 - Rendu d'une relecture : note entière de 0 à 20 et commentaire, définitive une fois validée
 - Consultation par l'auteur de la note et du commentaire reçus, sans l'identité du relecteur
 - Tableau récapitulatif du formateur par promotion
-- Jeu de données de démonstration chargé au démarrage
+- Jeu de données de démonstration chargé au démarrage, sans aucune action manuelle
+- Déploiement local complet par une seule commande : base de données, backend et frontend conteneurisés
+- Interface soignée : palette cohérente, statuts métier lisibles au premier coup d'œil, états de chargement et d'erreur visibles
 
 **Explicitement exclu :**
 
@@ -48,7 +50,7 @@ L'objectif n'est pas de noter à la place du formateur, mais de faire porter la 
 - **Toute notification** par courriel, SMS ou notification poussée : rien ne prévient un relecteur qu'il a été assigné, il le découvre sur son écran.
 - **L'envoi de fichiers** : on stocke un lien, jamais un document.
 - **L'export** du tableau en PDF ou tableur, et toute statistique au-delà de ce que Q16 demande.
-- **Le soin apporté à l'interface** : le sujet exclut explicitement le rendu visuel de la notation, aucun effort n'est investi dans le CSS au-delà du lisible.
+- **Les thèmes personnalisables et le mode sombre** : l'interface est soignée (ENF9), mais elle n'offre qu'une seule apparence, non paramétrable.
 - **La réouverture d'une session clôturée** : la clôture est un aller simple.
 
 ## 4. Exigences fonctionnelles
@@ -78,16 +80,19 @@ L'objectif n'est pas de noter à la place du formateur, mais de faire porter la 
 | **ENF3** | La volumétrie cible est de 5 promotions, 60 étudiants par promotion, une session par jour ouvré, soit de l'ordre de 12 000 présences par an — une base relationnelle mono-instance suffit | Dimensionnement documenté ; aucune optimisation prématurée, index posés sur les clés de recherche |
 | **ENF4** | Aucune erreur ne renvoie de stack trace ni de corps vide : toutes sans exception respectent le format `{ code, message }` | Un test d'intégration par famille d'erreur vérifie le code HTTP et la présence des deux champs |
 | **ENF5** | Le code de présence n'est pas devinable : 6 caractères tirés aléatoirement dans un alphabet sans caractères ambigus | Inspection du générateur ; deux sessions ouvertes simultanément n'ont jamais le même code (RG2) |
-| **ENF6** | L'application démarre chez un tiers depuis un clone vierge, en une commande `docker compose up` ou trois commandes documentées, avec des données de démonstration | Cloner le dépôt dans un dossier vide et suivre le README sans aucune autre information |
+| **ENF6** | L'application démarre chez un tiers depuis un clone vierge par **une seule commande, `docker compose up --build`**, qui lève la base de données, le backend et le frontend, et charge les données de démonstration sans aucune action manuelle | Cloner le dépôt dans un dossier vide, lancer la commande, ouvrir l'adresse du frontend et constater que le tableau du formateur est déjà peuplé |
 | **ENF7** | La suite de tests s'exécute sur un poste vierge, sans base de données locale ni configuration préalable | `./mvnw test` passe après un clone, sur une base embarquée |
 | **ENF8** | Les messages d'erreur destinés à l'utilisateur sont en français et compréhensibles sans connaissance technique | Relecture des libellés de chaque code d'erreur |
+| **ENF9** | L'interface est présentable : une palette de couleurs cohérente appliquée aux trois écrans, chaque statut métier identifiable à sa couleur et à son libellé, et les états de chargement comme d'erreur toujours visibles plutôt que silencieux | Parcourir les trois écrans : aucun état n'est muet, aucun statut n'est indiscernable d'un autre, et la même couleur signifie toujours la même chose |
+| **ENF10** | Aucune variable d'environnement, aucun fichier de configuration et aucune installation de Java, Node ou PostgreSQL ne sont nécessaires sur le poste du correcteur — seul Docker est requis | Lancer la commande unique sur une machine où ni Java ni Node ne sont installés |
+| **ENF11** | Le frontend, servi sur un autre port que l'API, peut l'appeler depuis un navigateur : les en-têtes CORS autorisent explicitement son origine | Ouvrir l'application dans un navigateur et vérifier qu'aucun appel n'est bloqué. Ce point ne se vérifie **pas** avec `curl`, qui n'applique aucune politique d'origine |
 
 ## 6. Règles de gestion
 
 | Réf | Règle | Source |
 |---|---|---|
 | **RG1** | Un code de présence expire 15 minutes après l'ouverture de la session | Q2 |
-| **RG2** | Le code d'une session est unique parmi les sessions ouvertes | Décision — sans unicité, un code peut désigner deux séances |
+| **RG2** | Le code d'une session est unique, globalement et non seulement parmi les sessions ouvertes | Décision — sans unicité, un code peut désigner deux séances. L'unicité globale est retenue parce que H2, sur lequel tournent les tests, ne sait pas créer d'index partiel |
 | **RG3** | Une présence est unique pour un couple (étudiant, session) ; une seconde tentative est refusée en `409 DEJA_PRESENT` | Contrat |
 | **RG4** | Un code qui ne correspond à aucune session ouverte de la promotion de l'étudiant est refusé en `400 CODE_INCONNU` | Contrat |
 | **RG5** | Un code dont la date d'expiration est dépassée est refusé en `410 CODE_EXPIRE` | Q2, Contrat |
@@ -163,6 +168,11 @@ L'objectif n'est pas de noter à la place du formateur, mais de faire porter la 
 - **Frontend Next.js** (App Router, TypeScript), tous les appels réseau regroupés dans `src/services/api.ts` — aucun `fetch` ailleurs dans le code. La moyenne affichée provient de l'API et n'est jamais recalculée côté client.
 - **Fuseau horaire** : toutes les dates sont stockées et échangées en UTC, au format ISO-8601 avec décalage.
 - **Aucun secret dans le dépôt** : les identifiants de base de données de développement vivent dans `docker-compose.yml` et sont, par nature, non sensibles.
+- **Tout est conteneurisé** : `docker-compose.yml` lève PostgreSQL, le backend et le frontend. Le backend est construit en deux étapes — compilation Maven puis image d'exécution JRE seule — et le frontend en `output: standalone`, pour que les images restent légères et qu'aucun outil de développement ne subsiste à l'exécution.
+- **Le seed est une migration Flyway**, pas un script à lancer à la main : les données de démonstration arrivent avec le schéma, au premier démarrage, et sont donc reproductibles et versionnées comme lui. Les migrations sont réparties en **deux emplacements** : `db/migration` porte le schéma et le référentiel, indispensables au fonctionnement ; `db/demo` porte l'activité de démonstration — séances, présences, exercices, relectures. La valeur par défaut de l'application ne charge que le premier, et `docker-compose.yml` active le second explicitement. Deux raisons : un test qui compte des lignes ne doit pas dépendre d'un jeu de démonstration appelé à évoluer, et on ne doit pas pouvoir peupler une base par inadvertance — il faut le demander.
+- **Le frontend attend le backend** et le backend attend la base, par `depends_on` avec contrôle de santé : `docker compose up --build` suffit, sans ordre de lancement à respecter ni seconde commande.
+- **CORS configuré explicitement** sur `/api/**`, avec les origines en propriété et non en dur. Sans ces en-têtes, le navigateur bloque tous les appels du frontend alors que `curl` répond `200` : c'est un défaut qui ne se voit qu'en ouvrant réellement l'application. Aucun envoi d'identifiants n'est autorisé — il n'y a pas d'authentification (Q1), permettre les cookies ouvrirait une porte inutile.
+- **Une palette unique**, définie en variables CSS dans une feuille de styles globale, réutilisée par les trois écrans. Aucune couleur n'est écrite en dur dans un composant : une couleur porte un rôle, pas une valeur.
 
 ## 9. Livrables
 
@@ -182,6 +192,19 @@ L'objectif n'est pas de noter à la place du formateur, mais de faire porter la 
 **Étape 1 — Analyse.** Ce cahier des charges, les diagrammes, le contrat complété et le backlog en issues, puis le commit `[JALON] analyse`. Aucune ligne de code, aucun `spring init` avant ce jalon.
 
 **Étape 2 — Première version.** Les seules stories `Must` : EF1 à EF8. Une branche par issue, une pull request par branche, l'issue fermée par le commit de fusion. Le schéma est versionné dès la première migration. Puis `[JALON] v0.1`.
+
+**Stratégie de branches.** Le dépôt suit un git-flow allégé, à deux branches longues :
+
+| Branche | Rôle |
+|---|---|
+| `main` | **Ne reçoit que des livraisons.** Elle porte les trois commits `[JALON]` et ne doit jamais être cassée. C'est la branche déclarée dans `SOUMISSION.md`, et c'est sur elle que le commit final est relevé |
+| `develop` | **Branche d'intégration et branche par défaut du dépôt.** Toutes les branches fonctionnelles y sont fusionnées par pull request |
+| `feat/<n°>-<intitulé>` | Une par issue. Exemple : `feat/1-ouvrir-session`. Fusionnée dans `develop`, jamais dans `main` |
+| `fix/<n°>-<intitulé>` | Correctifs, notamment celui de l'étape 3 — séparé de l'évolution, qui a sa propre branche |
+
+`develop` est fusionnée dans `main` **aux jalons seulement** : une fois à `v0.1`, une fois à `v1.0`. Aucun commit n'est écrit directement sur `main` après l'étape 1.
+
+Ce choix coûte une fusion supplémentaire à chaque jalon, et il l'assume : il garantit que `main` ne contient à aucun moment un état intermédiaire non testé, ce que le barème demande explicitement.
 
 **Étape 3 — Enveloppe.** Dans cet ordre, sans raccourci : ouvrir l'issue avant d'écrire la moindre ligne, reproduire le bug par un test qui échoue, corriger, puis traiter le changement de besoin **dans une branche séparée** — le correctif et l'évolution ne partagent jamais un commit. Toute modification du schéma passe par une nouvelle migration. Le contrat, ce document et les diagrammes sont mis à jour dans un commit qui l'annonce, et le backlog re-priorisé par écrit dans le journal.
 
@@ -210,5 +233,7 @@ L'objectif n'est pas de noter à la place du formateur, mais de faire porter la 
 | Version | Quand | Ce qui a changé et pourquoi |
 |---|---|---|
 | 1 | 25/09/2026 | Version initiale, avant tout code. Contradiction Q10/Q15 tranchée en faveur de Q15 ; quatre trous de la demande comblés par décision (cycle de vie de la session, moment de l'assignation, absence de relecteur éligible, appartenance à une promotion) |
+| 3 | 25/09/2026 | **ENF11 ajoutée après vérification réelle dans un navigateur.** Le frontend et l'API étant servis sur deux ports, tout appel est *cross-origin* : sans en-têtes CORS le navigateur les bloque tous. Le défaut ne se voyait pas en test — `curl` n'applique aucune politique d'origine et répondait `200`. Constaté en lançant la pile Docker, corrigé, et inscrit en exigence pour qu'il soit vérifié comme tel |
+| 2 | 25/09/2026 | **Élargissement du périmètre à la demande du commanditaire, après l'étape 1.** Trois changements : *(a)* l'exclusion « aucun effort investi dans le CSS » est retirée du §3 et remplacée par **ENF9** — l'interface doit être présentable, avec une palette cohérente et des statuts lisibles ; *(b)* **ENF6 est renforcée** — le démarrage passe d'« une commande ou trois » à **une seule commande, `docker compose up --build`**, frontend compris, avec seed automatique, et **ENF10** ajoutée : seul Docker est requis sur le poste du correcteur ; *(c)* la **stratégie de branches** est inscrite au §10 — git-flow allégé, `develop` devient la branche d'intégration et la branche par défaut du dépôt, `main` ne reçoit plus que les livraisons aux jalons. Les contraintes techniques du §8 sont complétées en conséquence (images multi-étapes, seed par migration Flyway, contrôles de santé, palette en variables CSS) |
 
 *L'étape 3 rendra une partie de ce document faux. Revenir le corriger et le noter ici — un cahier des charges périmé est un cahier des charges mort.*

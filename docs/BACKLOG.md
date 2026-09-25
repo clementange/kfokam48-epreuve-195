@@ -18,7 +18,8 @@
 | 7 | Le système assigne un relecteur à chaque exercice déposé | [#7](https://github.com/clementange/kfokam48-epreuve-195/issues/7) | **Must** | EF6 | RG15, RG16, RG17 | v0.1 |
 | 8 | Le relecteur rend sa note et son commentaire | [#8](https://github.com/clementange/kfokam48-epreuve-195/issues/8) | **Must** | EF7 | RG17, RG18, RG19 | v0.1 |
 | 9 | Le formateur consulte le tableau récapitulatif de sa promotion | [#9](https://github.com/clementange/kfokam48-epreuve-195/issues/9) | **Must** | EF8 | RG21, RG22, RG23 | v0.1 |
-| 10 | L'application démarre chez un tiers depuis un clone vierge | [#10](https://github.com/clementange/kfokam48-epreuve-195/issues/10) | **Must** | ENF6 | — | v0.1 |
+| 10 | L'application démarre chez un tiers par une seule commande `docker compose up --build` | [#10](https://github.com/clementange/kfokam48-epreuve-195/issues/10) | **Must** | ENF6, ENF10 | — | v0.1 |
+| 16 | L'interface est présentable : palette cohérente et statuts lisibles | [#17](https://github.com/clementange/kfokam48-epreuve-195/issues/17) | **Must** | ENF9 | RG8, RG16, RG21 | v1.0 |
 | 11 | Le formateur ajoute une présence à la main | [#11](https://github.com/clementange/kfokam48-epreuve-195/issues/11) | Should | EF9 | RG8, RG6 | v1.0 |
 | 12 | L'étudiant remplace le lien de son exercice | [#12](https://github.com/clementange/kfokam48-epreuve-195/issues/12) | Should | EF10 | RG13 | v1.0 |
 | 13 | L'étudiant consulte la note et le commentaire reçus | [#13](https://github.com/clementange/kfokam48-epreuve-195/issues/13) | Should | EF11 | RG20 | v1.0 |
@@ -57,3 +58,4 @@ tests de B6, et la mise à jour de l'analyse après l'étape 3.
 | Quand | Ce qui a changé et pourquoi |
 |---|---|
 | 25/09/2026 | Backlog initial, 15 stories, avant tout code. Ouvert en issues #1 à #15 sur le dépôt |
+| 25/09/2026 | **Périmètre élargi par le commanditaire après l'étape 1.** Story 10 renforcée — le démarrage passe à une seule commande, frontend conteneurisé compris (ENF6, ENF10, issue #10 réécrite). Story 16 ajoutée en `Must` — interface présentable (ENF9, issue #17). Aucune story existante n'est déclassée : le périmètre s'élargit, il ne se déplace pas |

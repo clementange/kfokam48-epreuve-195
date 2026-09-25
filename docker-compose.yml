@@ -1,0 +1,91 @@
+# =============================================================================
+# Presence & Relecture KFOKAM48 — pile complete
+#
+#   docker compose up --build
+#
+# Une seule commande, et rien d'autre a installer que Docker (ENF10). Elle leve
+# la base, le backend et le frontend, charge le schema, le referentiel ET
+# l'activite de demonstration, puis sert l'application sur
+# http://localhost:3000 (ENF6).
+#
+# Les identifiants ci-dessous sont ceux d'une base de developpement jetable.
+# Ce ne sont pas des secrets : ils ne donnent acces a rien d'autre qu'a un
+# conteneur local. Un deploiement reel les recevrait par variables
+# d'environnement, jamais par un fichier versionne.
+# =============================================================================
+
+services:
+
+  base:
+    image: postgres:16-alpine
+    container_name: kfokam48-base
+    environment:
+      POSTGRES_DB: kfokam48
+      POSTGRES_USER: kfokam48
+      POSTGRES_PASSWORD: kfokam48
+    # La base n'est pas exposee sur la machine hote : seuls les autres
+    # conteneurs y accedent. Retirez le commentaire ci-dessous pour l'inspecter
+    # avec un client SQL.
+    # ports:
+    #   - "5432:5432"
+    volumes:
+      - donnees-postgres:/var/lib/postgresql/data
+    healthcheck:
+      # Sans ce controle, le backend demarrerait avant que PostgreSQL accepte
+      # les connexions et Flyway echouerait. `depends_on` seul ne garantit que
+      # l'ordre de lancement, pas la disponibilite du service.
+      test: ["CMD-SHELL", "pg_isready -U kfokam48 -d kfokam48"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 10s
+
+  backend:
+    build:
+      context: ./backend
+    container_name: kfokam48-backend
+    depends_on:
+      base:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://base:5432/kfokam48
+      SPRING_DATASOURCE_USERNAME: kfokam48
+      SPRING_DATASOURCE_PASSWORD: kfokam48
+      # C'est ici, et seulement ici, que l'activite de demonstration est
+      # activee. La valeur par defaut de l'application ne charge que le schema
+      # et le referentiel : on ne peut pas peupler une base par inadvertance,
+      # il faut le demander explicitement.
+      SPRING_FLYWAY_LOCATIONS: classpath:db/migration,classpath:db/demo
+      # Sans cette origine, le navigateur bloque tous les appels du frontend.
+      # Le defaut suit PORT_WEB, pour rester coherent si le port est change.
+      APP_CORS_ORIGINES: ${ORIGINE_WEB:-http://localhost:3000}
+    ports:
+      # Port parametrable : 8080 par defaut, conformement au contrat d'API.
+      # Si ce port est deja pris sur la machine — un autre projet, un Keycloak
+      # qui traine — lancez :
+      #   PORT_API=8081 API_URL_NAVIGATEUR=http://localhost:8081 docker compose up --build
+      - "${PORT_API:-8080}:8080"
+    healthcheck:
+      test: ["CMD", "sh", "-c", "wget -qO- http://localhost:8080/api/promotions || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 40s
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        # Figee dans le bundle a la construction : c'est l'adresse que le
+        # NAVIGATEUR appellera, donc celle vue depuis la machine du correcteur,
+        # et non le nom de service Docker, inconnu hors du reseau interne.
+        NEXT_PUBLIC_API_URL: ${API_URL_NAVIGATEUR:-http://localhost:8080}
+    container_name: kfokam48-frontend
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "${PORT_WEB:-3000}:3000"
+
+volumes:
+  donnees-postgres:

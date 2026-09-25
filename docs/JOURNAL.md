@@ -32,11 +32,21 @@ J'ai aussi écarté une proposition de l'IA : découper le backlog en tickets te
 
 ## Étape 2 — Première version
 
-**Fait :**
+**Fait :** les dix stories `Must`, chacune sur sa branche avec sa pull request et son issue fermée par le commit de fusion. Backend complet — les 5 opérations imposées du contrat plus 8 ajoutées —, 165 tests, les trois écrans Next.js, et `docker compose up --build` qui lève la pile entière avec ses données de démonstration. Onze pull requests fusionnées dans `develop`.
 
-**Bloqué :**
+**Bloqué :** trois fois, et chaque fois par un défaut que je n'aurais pas vu sans vérifier.
 
-**IA :**
+Une heure environ, cumulée, sur des pièges d'outillage. **Surefire n'exécutait pas mes tests d'intégration** : le suffixe `IT` n'est pas dans ses `includes` par défaut, la classe compilait sans jamais tourner et je l'aurais crue verte. **Spring Boot 4 est passé à Jackson 3** (`tools.jackson.databind`) et a déplacé `AutoConfigureMockMvc`. Et un **résidu de build** — l'ancien `V3` resté dans `target/classes` après un déplacement de fichier — m'a fait chercher pendant vingt minutes un problème de configuration qui n'existait pas : `mvn test` ne nettoie pas les fichiers obsolètes.
+
+Vingt minutes sur la **note décimale**. Reçue en `Integer`, `15.5` était acceptée par Jackson et **tronquée silencieusement en 15**. Q9 dit « en nombres entiers » : le relecteur aurait cru mettre 15,5, l'étudiant aurait reçu 15, et personne n'aurait été averti. J'ai d'abord essayé `spring.jackson.deserialization.accept-float-as-int` — sans effet en Boot 4 — puis je l'ai retirée plutôt que de laisser une configuration qui ne fait rien. La note est désormais reçue en `BigDecimal` et **refusée, pas arrondie** : arrondir déciderait à la place du relecteur.
+
+Le plus grave, trouvé en lançant réellement Docker : **CORS n'était pas configuré**. Le frontend et l'API étant sur deux ports, le navigateur aurait bloqué tous les appels. Les 165 tests passaient, `curl` répondait `200` — `curl` n'applique aucune politique d'origine. L'application aurait été entièrement muette à l'écran. C'est devenu ENF11, avec sa méthode de vérification écrite noir sur blanc.
+
+**IA :** je m'en suis servi pour écrire le gros du code et des tests, puis j'ai vérifié en exécutant, jamais en relisant. C'est ce qui a fait la différence à chaque fois : le test Surefire qui ne tournait pas, la troncature de note, et CORS ne se voient pas à la lecture du code — ils se voient quand on lance.
+
+Deux propositions écartées : des tests qui dépendaient du tirage aléatoire du relecteur — un test qui dépend du hasard ne prouve rien le jour où il passe, j'ai injecté un tirage déterministe — et une désactivation des règles ESLint sur `setState` dans un effet, que j'ai corrigées à la racine avec une `key` et des drapeaux d'annulation.
+
+**Ce que j'ai sorti du périmètre :** rien pour l'instant. Les deux stories `Should` et `Could` restantes — présence manuelle (#11) et blocage après cinq erreurs (#15) — sont reportées en v1.0, comme prévu au §10 du cahier des charges.
 
 ---
 

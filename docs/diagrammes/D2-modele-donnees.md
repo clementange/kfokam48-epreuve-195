@@ -3,6 +3,10 @@
 > **Ce diagramme fait foi pour les migrations Flyway.** Toute divergence entre ce schéma et
 > `backend/src/main/resources/db/migration/` est un défaut : c'est ce document qu'on corrige
 > en même temps que la migration, dans le même commit.
+>
+> Les migrations vivent dans deux dossiers : `db/migration` pour le schéma et le référentiel,
+> `db/demo` pour l'activité de démonstration. Seul le premier décrit la structure ; c'est celui
+> que ce diagramme représente.
 
 ```mermaid
 erDiagram
@@ -37,7 +41,7 @@ erDiagram
         bigint    id            PK
         varchar   titre         "NOT NULL"
         bigint    promotion_id  FK "NOT NULL"
-        varchar   code          "NOT NULL - 6 car. - unique si OUVERTE - RG2"
+        varchar   code          "NOT NULL - 6 car. - UNIQUE global - RG2"
         timestamp ouverture_at  "NOT NULL - UTC"
         timestamp expiration_at "NOT NULL - ouverture + 15 min - RG1"
         varchar   statut        "OUVERTE | CLOTUREE - RG14"
@@ -81,7 +85,7 @@ erDiagram
 | `UNIQUE (session_id, etudiant_id)` sur `presence` | **RG3** | Deux requêtes simultanées passeraient la vérification applicative ; seule la base garantit l'unicité. Sa violation est traduite en `409 DEJA_PRESENT` |
 | `UNIQUE (session_id, etudiant_id)` sur `exercice` | **RG9** | Même raison. Traduite en `409 EXERCICE_DEJA_DEPOSE` |
 | `UNIQUE (exercice_id)` sur `relecture` | **RG15** | Un exercice n'a jamais deux relecteurs (Q6) |
-| Index partiel `UNIQUE (code) WHERE statut = 'OUVERTE'` | **RG2** | Un code ne désigne jamais deux séances ouvertes. Les codes des sessions clôturées peuvent être réutilisés |
+| `UNIQUE (code)` sur `session` | **RG2** | Un code ne désigne jamais deux séances. D2 prévoyait initialement un index **partiel** `WHERE statut = 'OUVERTE'`, que **H2 ne sait pas créer** — or les tests d'intégration tournent sur H2 (ENF7). L'unicité est donc **globale** : c'est une contrainte plus forte, qui satisfait RG2 a fortiori. Le coût est de ne jamais réutiliser un code, sans conséquence sur un espace de 32⁶ valeurs |
 | `CHECK (note IS NULL OR note BETWEEN 0 AND 20)` | **RG18** | Dernier rempart ; la validation `@Min`/`@Max` reste le premier |
 | `CHECK (source IN ('ETUDIANT','FORMATEUR'))` | **RG8** | Le champ `source` du contrat n'accepte que ces deux valeurs |
 | `CHECK (statut IN (...))` sur `session`, `exercice`, `relecture` | RG14, RG21 | Les statuts sont stockés en `varchar` et non en type `enum` PostgreSQL, pour rester portable H2 (cahier des charges §8) |
