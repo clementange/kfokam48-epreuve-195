@@ -89,8 +89,8 @@ cd backend && ./mvnw test
 | Étape | État |
 |---|---|
 | 1 — Analyse, spécification, conception | **terminée** — jalon `[JALON] analyse` posé |
-| 2 — Première version (`Must`) | **en cours** |
-| 3 — Enveloppe | à venir |
+| 2 — Première version (`Must`) | **terminée** — jalon `[JALON] v0.1` |
+| 3 — Enveloppe | **en cours** |
 | 4 — Version finale | à venir |
 
 ## Structure
