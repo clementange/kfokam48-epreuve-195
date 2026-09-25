@@ -206,13 +206,13 @@ L'objectif n'est pas de noter à la place du formateur, mais de faire porter la 
 
 Ce choix coûte une fusion supplémentaire à chaque jalon, et il l'assume : il garantit que `main` ne contient à aucun moment un état intermédiaire non testé, ce que le barème demande explicitement.
 
-**Étape 3 — Enveloppe.** Dans cet ordre, sans raccourci : ouvrir l'issue avant d'écrire la moindre ligne, reproduire le bug par un test qui échoue, corriger, puis traiter le changement de besoin **dans une branche séparée** — le correctif et l'évolution ne partagent jamais un commit. Toute modification du schéma passe par une nouvelle migration. Le contrat, ce document et les diagrammes sont mis à jour dans un commit qui l'annonce, et le backlog re-priorisé par écrit dans le journal.
+**Étape 3 — Enveloppe**, remise par le surveillant une fois `[JALON] v0.1` poussé. Dans cet ordre, sans raccourci : ouvrir l'issue avant d'écrire la moindre ligne, reproduire le bug par un test qui échoue, corriger, puis traiter le changement de besoin **dans une branche séparée** — le correctif et l'évolution ne partagent jamais un commit. Toute modification du schéma passe par une nouvelle migration. Le contrat, ce document et les diagrammes sont mis à jour dans un commit qui l'annonce, et le backlog re-priorisé par écrit dans le journal.
 
 **Étape 4 — Version finale.** `[JALON] v1.0`, `CHANGELOG.md`, README vérifié depuis un clone vierge dans un dossier vide, backlog restant trié et assumé.
 
-**Étape 5 — Épreuve Git**, sur un second dépôt, historique strictement séparé de celui-ci.
+**Étape 5 — Soumission** avant 18h00, hash relevé une fois le travail terminé.
 
-**Étape 6 — Soumission** avant 18h00, hash relevés une fois le travail terminé.
+> *Révision du sujet, 25/09/2026 :* l'épreuve Git sur dépôt fourni — ancienne étape 5, 17 points — **est supprimée**, le bundle n'existait pas. « Soumettre » devient l'étape 5 et l'épreuve compte désormais **cinq étapes**. Ces 17 points sont redistribués : Git passe de 15 à **30 points** sur le seul historique de ce dépôt, et Produit et conformité de 15 à **17**.
 
 **Si je prends du retard :** je sacrifie dans cet ordre EF12, puis EF11, puis EF13, puis EF10, puis EF9. Je ne sacrifie jamais les migrations, les tests B6, ni la mise à jour documentaire de l'étape 3 — ce sont les postes du barème les plus coûteux à perdre. Un périmètre réduit et annoncé vaut mieux qu'une promesse non tenue.
 
@@ -233,6 +233,7 @@ Ce choix coûte une fusion supplémentaire à chaque jalon, et il l'assume : il 
 | Version | Quand | Ce qui a changé et pourquoi |
 |---|---|---|
 | 1 | 25/09/2026 | Version initiale, avant tout code. Contradiction Q10/Q15 tranchée en faveur de Q15 ; quatre trous de la demande comblés par décision (cycle de vie de la session, moment de l'assignation, absence de relecteur éligible, appartenance à une promotion) |
+| 4 | 25/09/2026 | **Révision du sujet par la direction.** L'épreuve Git sur dépôt fourni est supprimée — le bundle n'existait pas —, « Soumettre » devient l'étape 5, et l'épreuve compte cinq étapes. Le barème est redistribué : Git 30 points au lieu de 15 hors git-lab, Produit et conformité 17 au lieu de 15. Le §10 et `SOUMISSION.md` sont corrigés en conséquence. Aucune incidence sur le produit : le travail déjà fait reste valable, seule la répartition des points change |
 | 3 | 25/09/2026 | **ENF11 ajoutée après vérification réelle dans un navigateur.** Le frontend et l'API étant servis sur deux ports, tout appel est *cross-origin* : sans en-têtes CORS le navigateur les bloque tous. Le défaut ne se voyait pas en test — `curl` n'applique aucune politique d'origine et répondait `200`. Constaté en lançant la pile Docker, corrigé, et inscrit en exigence pour qu'il soit vérifié comme tel |
 | 2 | 25/09/2026 | **Élargissement du périmètre à la demande du commanditaire, après l'étape 1.** Trois changements : *(a)* l'exclusion « aucun effort investi dans le CSS » est retirée du §3 et remplacée par **ENF9** — l'interface doit être présentable, avec une palette cohérente et des statuts lisibles ; *(b)* **ENF6 est renforcée** — le démarrage passe d'« une commande ou trois » à **une seule commande, `docker compose up --build`**, frontend compris, avec seed automatique, et **ENF10** ajoutée : seul Docker est requis sur le poste du correcteur ; *(c)* la **stratégie de branches** est inscrite au §10 — git-flow allégé, `develop` devient la branche d'intégration et la branche par défaut du dépôt, `main` ne reçoit plus que les livraisons aux jalons. Les contraintes techniques du §8 sont complétées en conséquence (images multi-étapes, seed par migration Flyway, contrôles de santé, palette en variables CSS) |
 
