@@ -13,8 +13,8 @@ lit dans un tableau unique qui était là, qui a rendu et quelle moyenne chacun 
 
 | Étape | État |
 |---|---|
-| 1 — Analyse, spécification, conception | **en cours** |
-| 2 — Première version (`Must`) | à venir |
+| 1 — Analyse, spécification, conception | **terminée** — jalon `[JALON] analyse` posé |
+| 2 — Première version (`Must`) | **en cours** |
 | 3 — Enveloppe | à venir |
 | 4 — Version finale | à venir |
 
@@ -43,6 +43,19 @@ frontend/ Next.js
 | [`docs/BACKLOG.md`](docs/BACKLOG.md) | Les 15 stories et l'ordre de traitement assumé |
 | [`api/contrat.yaml`](api/contrat.yaml) | Les 5 opérations imposées, reprises à l'identique, et les 8 opérations ajoutées avec leur justification |
 | [`docs/JOURNAL.md`](docs/JOURNAL.md) | Le journal de bord, une entrée par étape |
+
+## Organisation des branches
+
+Le dépôt suit un git-flow allégé :
+
+| Branche | Rôle |
+|---|---|
+| `main` | Ne reçoit que des **livraisons**. Porte les trois commits `[JALON]`, n'est jamais cassée. C'est la branche déclarée dans la soumission |
+| `develop` | Branche d'**intégration**, et branche par défaut du dépôt. Toutes les branches fonctionnelles y sont fusionnées par pull request |
+| `feat/<n°>-<intitulé>` | Une par issue, fusionnée dans `develop` |
+| `fix/<n°>-<intitulé>` | Correctifs, séparés des évolutions |
+
+`develop` est fusionnée dans `main` **aux jalons seulement** : `v0.1`, puis `v1.0`.
 
 ## Choix techniques
 
